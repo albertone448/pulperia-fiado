@@ -10,7 +10,7 @@ import DailySummary from './components/DailySummary'
 
 // Después de este tiempo sin tocar nada, se vuelve a pedir el perfil (PIN).
 // No cierra la sesión de Firebase, solo "desloguea" el perfil activo.
-const MINUTOS_INACTIVIDAD = 30
+const MINUTOS_INACTIVIDAD = 5
 
 export default function App() {
   const [authUser, setAuthUser] = useState(undefined) // undefined = cargando
@@ -89,7 +89,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-header-titulo">
-          <span className="app-header-logo">Mini Super</span>
+          <span className="app-header-logo">Minisúper El Puente</span>
           <span className="app-header-sub">Fiado</span>
         </div>
         <div className="app-header-derecha">

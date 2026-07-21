@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ref, push, update } from 'firebase/database'
 import { db } from '../firebase'
 
@@ -37,6 +37,20 @@ export default function ProfileSelector({ perfiles, onSeleccionar, onCerrarSesio
       }, 700)
     }
   }
+
+  // Permite escribir el PIN con el teclado físico, además de tocar los números en pantalla.
+  useEffect(() => {
+    if (!perfilParaPin) return
+    function manejarTecla(e) {
+      if (e.key >= '0' && e.key <= '9') {
+        digitar(e.key)
+      } else if (e.key === 'Backspace') {
+        setPinIngresado((p) => p.slice(0, -1))
+      }
+    }
+    window.addEventListener('keydown', manejarTecla)
+    return () => window.removeEventListener('keydown', manejarTecla)
+  }, [perfilParaPin, pinIngresado])
 
   if (creando) {
     return <CrearPerfil onCancelar={() => setCreando(false)} onCreado={() => setCreando(false)} />

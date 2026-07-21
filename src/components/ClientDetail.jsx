@@ -6,12 +6,14 @@ import { formatColones, formatFechaHora } from '../utils/dateUtils'
 import NewChargeModal from './NewChargeModal'
 import NewPaymentModal from './NewPaymentModal'
 import EditTransactionModal from './EditTransactionModal'
+import EditClientModal from './EditClientModal'
 
 const LIMITE_DEFAULT = 50000
 
 export default function ClientDetail({ clienteId, cliente, transacciones, perfilActivo, perfiles, onVolver }) {
   const [modal, setModal] = useState(null) // 'cargo' | 'pago' | null
   const [editando, setEditando] = useState(null) // [id, transaccion] o null
+  const [editandoCliente, setEditandoCliente] = useState(false)
   const [editandoLimite, setEditandoLimite] = useState(false)
   const [nuevoLimite, setNuevoLimite] = useState(String(cliente.limite ?? LIMITE_DEFAULT))
 
@@ -35,6 +37,9 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         <div>
           <h2 className="cliente-nombre-grande">{cliente.nombre}</h2>
           {cliente.telefono && <p className="cliente-telefono">{cliente.telefono}</p>}
+          <button className="btn-link" onClick={() => setEditandoCliente(true)}>
+            Editar datos del cliente
+          </button>
         </div>
         <div className="cliente-deuda-box">
           <span className="cliente-deuda-label">Debe</span>
@@ -75,7 +80,7 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
 
       <div className="acciones-cliente">
         <button className="btn-primario" onClick={() => setModal('cargo')}>
-          + Anotar fiado
+          + Anotar compra
         </button>
         <button className="btn-secundario" onClick={() => setModal('pago')}>
           + Registrar pago
@@ -88,7 +93,9 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         {historial.map(([id, t]) => (
           <button key={id} className="fila-historial" onClick={() => setEditando([id, t])}>
             <div className="fila-historial-info">
-              <span className="fila-historial-desc">{t.descripcion}</span>
+              <span className="fila-historial-desc">
+                {t.descripcion?.trim() ? t.descripcion : t.tipo === 'cargo' ? 'Compra' : 'Pago'}
+              </span>
               <span className="fila-historial-fecha">
                 {formatFechaHora(t.timestamp)} · {t.perfilNombre}
                 {t.editadoEn && ' · editado'}
@@ -107,6 +114,8 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
           clienteId={clienteId}
           perfilActivo={perfilActivo}
           perfiles={perfiles}
+          deudaActual={deuda}
+          limite={limite}
           onCerrar={() => setModal(null)}
         />
       )}
@@ -125,6 +134,13 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
           perfilActivo={perfilActivo}
           perfiles={perfiles}
           onCerrar={() => setEditando(null)}
+        />
+      )}
+      {editandoCliente && (
+        <EditClientModal
+          clienteId={clienteId}
+          cliente={cliente}
+          onCerrar={() => setEditandoCliente(false)}
         />
       )}
     </div>

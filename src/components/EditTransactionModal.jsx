@@ -33,7 +33,7 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
         setError('Poné un monto válido')
         return
       }
-      cambios.descripcion = descripcion.trim() || 'Sin descripción'
+      cambios.descripcion = descripcion.trim() || ''
       cambios.monto = Math.round(montoNum)
     } else {
       const metodosFinales = metodos
@@ -73,9 +73,6 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
 
         {esCargo ? (
           <>
-            <label className="campo-label">¿Qué se llevó?</label>
-            <input className="campo-input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-
             <label className="campo-label">Monto</label>
             <input
               className="campo-input campo-monto"
@@ -84,6 +81,9 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
             />
+
+            <label className="campo-label">Nota (opcional)</label>
+            <input className="campo-input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </>
         ) : (
           <>

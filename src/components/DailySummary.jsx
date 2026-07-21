@@ -63,7 +63,8 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
           <div key={id} className="fila-historial fila-historial-sin-click">
             <div className="fila-historial-info">
               <span className="fila-historial-desc">
-                {clientes[t.clienteId]?.nombre || 'Cliente eliminado'} · {t.descripcion}
+                {clientes[t.clienteId]?.nombre || 'Cliente eliminado'} ·{' '}
+                {t.descripcion?.trim() ? t.descripcion : t.tipo === 'cargo' ? 'Compra' : 'Pago'}
               </span>
               <span className="fila-historial-fecha">
                 {formatHora(t.timestamp)} · {t.perfilNombre}

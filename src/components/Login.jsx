@@ -23,7 +23,7 @@ export default function Login() {
   return (
     <div className="pantalla-centrada">
       <form className="tarjeta-login" onSubmit={handleSubmit}>
-        <h1 className="tarjeta-login-titulo">Mini Super</h1>
+        <h1 className="tarjeta-login-titulo">Minisúper El Puente</h1>
         <p className="tarjeta-login-sub">Sistema de fiado</p>
 
         <label className="campo-label">Correo</label>

@@ -204,6 +204,8 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   padding: 16px 20px;
   border-bottom: 1px solid var(--color-borde);
 }
@@ -212,12 +214,13 @@ select {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .app-header-logo {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  letter-spacing: 1px;
+  font-size: 22px;
+  letter-spacing: 0.5px;
   color: var(--color-morado-oscuro);
 }
 
@@ -466,6 +469,15 @@ select {
 
 .cliente-deuda-excedido {
   color: var(--color-rojo);
+}
+
+.alerta-limite-inline {
+  background: var(--color-rojo-claro);
+  color: var(--color-rojo);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: 10px 0 0;
 }
 
 .alerta-limite {
