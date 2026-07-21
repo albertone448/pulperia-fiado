@@ -1,0 +1,753 @@
+:root {
+  --color-bg: #ffffff;
+  --color-bg-suave: #faf7fc;
+  --color-texto: #2a2732;
+  --color-texto-suave: #75717e;
+  --color-morado: #6c3fa6;
+  --color-morado-oscuro: #522d80;
+  --color-morado-claro: #efe6f9;
+  --color-borde: #e7e2ee;
+  --color-rojo: #c0392b;
+  --color-rojo-claro: #fbeceb;
+  --radio: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-texto);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font-family: 'Inter', sans-serif;
+}
+
+.pantalla-carga {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--color-texto-suave);
+}
+
+.pantalla-centrada {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-suave);
+  padding: 24px;
+}
+
+/* ---------- Login ---------- */
+
+.tarjeta-login {
+  background: var(--color-bg);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(108, 63, 166, 0.08);
+}
+
+.tarjeta-login-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  font-size: 34px;
+  color: var(--color-morado-oscuro);
+  margin: 0;
+  text-align: center;
+}
+
+.tarjeta-login-sub {
+  text-align: center;
+  color: var(--color-texto-suave);
+  margin: 4px 0 20px;
+}
+
+/* ---------- Campos ---------- */
+
+.campo-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.campo-input {
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 16px;
+  background: var(--color-bg);
+  color: var(--color-texto);
+  width: 100%;
+}
+
+.campo-input:focus {
+  outline: none;
+  border-color: var(--color-morado);
+}
+
+.campo-monto {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+}
+
+.campo-select {
+  flex: 0 0 130px;
+}
+
+.campo-limite-inline {
+  display: inline-block;
+  width: 120px;
+  margin-right: 8px;
+}
+
+.mensaje-error {
+  color: var(--color-rojo);
+  font-size: 14px;
+  margin: 10px 0 0;
+}
+
+/* ---------- Botones ---------- */
+
+.btn-primario {
+  background: var(--color-morado);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 18px;
+}
+
+.btn-primario:hover {
+  background: var(--color-morado-oscuro);
+}
+
+.btn-primario:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secundario {
+  background: #fff;
+  color: var(--color-morado);
+  border: 1px solid var(--color-morado);
+  border-radius: 8px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-morado);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 0;
+  font-size: 14px;
+  text-align: left;
+}
+
+.btn-peligro {
+  background: var(--color-rojo);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-peligro-texto {
+  background: none;
+  border: none;
+  color: var(--color-rojo);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-ancho-fijo {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+/* ---------- App shell ---------- */
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.app-header-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.app-header-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: var(--color-morado-oscuro);
+}
+
+.app-header-sub {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.app-header-derecha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.perfil-activo-badge {
+  background: var(--color-morado-claro);
+  color: var(--color-morado-oscuro);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-activo {
+  color: var(--color-morado-oscuro);
+  border-bottom-color: var(--color-morado);
+}
+
+.app-main {
+  padding-bottom: 60px;
+}
+
+.contenedor {
+  padding: 18px 20px;
+}
+
+/* ---------- Lista de clientes ---------- */
+
+.barra-superior {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.campo-busqueda {
+  flex: 1;
+}
+
+.resumen-total-general {
+  background: var(--color-morado-claro);
+  color: var(--color-morado-oscuro);
+  padding: 12px 16px;
+  border-radius: var(--radio);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.resumen-total-general strong {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+}
+
+.lista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fila-cliente {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.fila-cliente:hover {
+  border-color: var(--color-morado);
+}
+
+.fila-cliente-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.fila-cliente-nombre {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.fila-cliente-telefono {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.fila-cliente-derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.monto-deuda {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.monto-deuda-excedido {
+  color: var(--color-rojo);
+}
+
+.etiqueta-alerta {
+  font-size: 11px;
+  background: var(--color-rojo-claro);
+  color: var(--color-rojo);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.texto-vacio {
+  color: var(--color-texto-suave);
+  text-align: center;
+  padding: 30px 0;
+}
+
+/* ---------- Modal ---------- */
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 39, 50, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-tarjeta {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 22px 28px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 560px) {
+  .modal-fondo {
+    align-items: center;
+  }
+  .modal-tarjeta {
+    border-radius: 16px;
+  }
+}
+
+.modal-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.5px;
+  color: var(--color-morado-oscuro);
+  margin: 0 0 6px;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-acciones-tres {
+  justify-content: space-between;
+}
+
+.modal-acciones .btn-primario,
+.modal-acciones .btn-secundario {
+  margin-top: 0;
+  flex: 1;
+}
+
+/* ---------- Cliente detalle ---------- */
+
+.tarjeta-cliente-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.cliente-nombre-grande {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.cliente-telefono {
+  color: var(--color-texto-suave);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+.cliente-deuda-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cliente-deuda-label {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+}
+
+.cliente-deuda-monto {
+  font-family: 'DM Mono', monospace;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--color-morado-oscuro);
+}
+
+.cliente-deuda-excedido {
+  color: var(--color-rojo);
+}
+
+.alerta-limite {
+  background: var(--color-rojo-claro);
+  color: var(--color-rojo);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.limite-editor {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acciones-cliente {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.acciones-cliente .btn-primario,
+.acciones-cliente .btn-secundario {
+  margin-top: 0;
+  flex: 1;
+}
+
+.subtitulo-historial {
+  font-size: 15px;
+  color: var(--color-texto-suave);
+  margin: 26px 0 10px;
+}
+
+.lista-historial {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fila-historial {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-borde);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.fila-historial-sin-click {
+  cursor: default;
+}
+
+.fila-historial-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fila-historial-desc {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fila-historial-fecha {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+}
+
+.monto-cargo {
+  font-family: 'DM Mono', monospace;
+  color: var(--color-morado-oscuro);
+  font-weight: 500;
+}
+
+.monto-pago {
+  font-family: 'DM Mono', monospace;
+  color: #2e8b57;
+  font-weight: 500;
+}
+
+.texto-trazabilidad {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+  margin: 0 0 4px;
+}
+
+.texto-trazabilidad-editado {
+  color: var(--color-rojo);
+}
+
+.confirmacion-borrado {
+  background: var(--color-rojo-claro);
+  padding: 14px;
+  border-radius: 10px;
+  margin-top: 16px;
+}
+
+/* ---------- Pago con múltiples métodos ---------- */
+
+.fila-metodo-pago {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.btn-quitar-fila {
+  background: none;
+  border: none;
+  color: var(--color-texto-suave);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.texto-total-pago {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  margin-top: 14px;
+  color: var(--color-morado-oscuro);
+}
+
+/* ---------- Resumen del día ---------- */
+
+.tarjetas-resumen {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 16px 0 8px;
+}
+
+.tarjeta-resumen {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tarjeta-resumen-destacada {
+  background: var(--color-morado-claro);
+  border-color: var(--color-morado-claro);
+  grid-column: span 2;
+}
+
+.tarjeta-resumen-label {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.tarjeta-resumen-valor {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-morado-oscuro);
+}
+
+/* ---------- Selector de perfiles ---------- */
+
+.selector-perfiles {
+  text-align: center;
+}
+
+.selector-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: var(--color-morado-oscuro);
+  margin-bottom: 24px;
+}
+
+.lista-perfiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.perfil-card {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  width: 100px;
+}
+
+.perfil-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-morado);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.perfil-avatar-nuevo {
+  background: var(--color-morado-claro);
+  color: var(--color-morado);
+  border: 2px dashed var(--color-morado);
+}
+
+.perfil-nombre {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---------- Teclado PIN ---------- */
+
+.tarjeta-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  margin: 8px 0 0;
+}
+
+.pin-sub {
+  color: var(--color-texto-suave);
+  margin: 0 0 10px;
+}
+
+.pin-puntos {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pin-punto {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-morado);
+}
+
+.pin-punto-lleno {
+  background: var(--color-morado);
+}
+
+.pin-teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.pin-tecla {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid var(--color-borde);
+  background: #fff;
+  font-size: 22px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pin-tecla:hover {
+  border-color: var(--color-morado);
+}
+
+.pin-tecla-borrar {
+  font-size: 18px;
+  color: var(--color-texto-suave);
+  border: none;
+}
