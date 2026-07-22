@@ -16,7 +16,27 @@ function centrado(texto) {
   return ' '.repeat(espacio) + texto
 }
 
-// ---------- Resumen del día ----------
+// ---------- Resumen del día: solo totales, para no gastar papel ----------
+
+export function construirTicketResumenSimple({ fechaTexto, totales }) {
+  const lineas = []
+  lineas.push(centrado('MINISUPER EL PUENTE'))
+  lineas.push(centrado('Resumen del dia'))
+  lineas.push(centrado(fechaTexto))
+  lineas.push(LINEA)
+  lineas.push(fila('Fiado hoy:', formatColones(totales.totalFiado)))
+  lineas.push(LINEA)
+  lineas.push('PAGOS RECIBIDOS')
+  lineas.push(fila('Efectivo:', formatColones(totales.porMetodo.efectivo)))
+  lineas.push(fila('Tarjeta:', formatColones(totales.porMetodo.tarjeta)))
+  lineas.push(fila('Sinpe:', formatColones(totales.porMetodo.sinpe)))
+  lineas.push(fila('Total pagos:', formatColones(totales.totalPagos)))
+  lineas.push(LINEA)
+  lineas.push(centrado(new Date().toLocaleString('es-CR')))
+  return lineas.join('\n')
+}
+
+// ---------- Resumen del día: detallado, ventas primero y pagos después (no revueltos) ----------
 
 export function construirTicketResumenDia({ fechaTexto, totales, movimientos, clientes }) {
   const lineas = []
@@ -32,16 +52,31 @@ export function construirTicketResumenDia({ fechaTexto, totales, movimientos, cl
   lineas.push(fila('Sinpe:', formatColones(totales.porMetodo.sinpe)))
   lineas.push(fila('Total pagos:', formatColones(totales.totalPagos)))
   lineas.push(LINEA)
-  lineas.push('MOVIMIENTOS')
-  if (movimientos.length === 0) {
-    lineas.push('(sin movimientos)')
+
+  const ventas = movimientos.filter(([, t]) => t.tipo === 'cargo')
+  const pagos = movimientos.filter(([, t]) => t.tipo === 'pago')
+
+  lineas.push('VENTAS (fiado)')
+  if (ventas.length === 0) {
+    lineas.push('(sin ventas)')
   }
-  for (const [, t] of movimientos) {
+  for (const [, t] of ventas) {
     const nombre = clientes[t.clienteId]?.nombre || 'Cliente eliminado'
-    const signo = t.tipo === 'cargo' ? '+' : '-'
     lineas.push(`${formatHora(t.timestamp)}  ${nombre}`)
-    lineas.push(fila('  ' + (t.descripcion?.trim() || (t.tipo === 'cargo' ? 'Compra' : 'Pago')), signo + formatColones(t.monto)))
+    lineas.push(fila('  ' + (t.descripcion?.trim() || 'Compra'), '+' + formatColones(t.monto)))
   }
+
+  lineas.push(LINEA)
+  lineas.push('PAGOS')
+  if (pagos.length === 0) {
+    lineas.push('(sin pagos)')
+  }
+  for (const [, t] of pagos) {
+    const nombre = clientes[t.clienteId]?.nombre || 'Cliente eliminado'
+    lineas.push(`${formatHora(t.timestamp)}  ${nombre}`)
+    lineas.push(fila('  ' + (t.descripcion?.trim() || 'Pago'), '-' + formatColones(t.monto)))
+  }
+
   lineas.push(LINEA)
   lineas.push(centrado(new Date().toLocaleString('es-CR')))
   return lineas.join('\n')

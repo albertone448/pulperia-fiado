@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { hoyFechaCR, toFechaCR, formatHora, formatColones } from '../utils/dateUtils'
-import { construirTicketResumenDia, copiarParaWhatsApp } from '../utils/ticket'
+import { construirTicketResumenDia, construirTicketResumenSimple, copiarParaWhatsApp } from '../utils/ticket'
 
 export default function DailySummary({ clientes, transacciones, perfiles }) {
   const [fecha, setFecha] = useState(hoyFechaCR())
   const [copiado, setCopiado] = useState(false)
+  const [modoImpresion, setModoImpresion] = useState('simple') // 'simple' | 'detallado'
 
   const transaccionesDelDia = useMemo(() => {
     return Object.entries(transacciones || {})
@@ -37,15 +38,27 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
     year: 'numeric',
   })
 
-  const textoTicket = construirTicketResumenDia({
+  const textoTicketDetallado = construirTicketResumenDia({
     fechaTexto: fechaTextoLarga,
     totales,
     movimientos: transaccionesDelDia,
     clientes,
   })
 
+  const textoTicketSimple = construirTicketResumenSimple({
+    fechaTexto: fechaTextoLarga,
+    totales,
+  })
+
+  const textoParaImprimir = modoImpresion === 'simple' ? textoTicketSimple : textoTicketDetallado
+
+  function imprimir(modo) {
+    setModoImpresion(modo)
+    setTimeout(() => window.print(), 50)
+  }
+
   async function handleCopiar() {
-    const ok = await copiarParaWhatsApp(textoTicket)
+    const ok = await copiarParaWhatsApp(textoTicketDetallado)
     if (ok) {
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2000)
@@ -60,9 +73,14 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
       </div>
 
       <div className="acciones-cliente">
-        <button className="btn-secundario" type="button" onClick={() => window.print()}>
-          Imprimir
+        <button className="btn-secundario" type="button" onClick={() => imprimir('simple')}>
+          Imprimir totales
         </button>
+        <button className="btn-secundario" type="button" onClick={() => imprimir('detallado')}>
+          Imprimir todo
+        </button>
+      </div>
+      <div className="acciones-cliente">
         <button className="btn-secundario" type="button" onClick={handleCopiar}>
           {copiado ? 'Copiado ✓' : 'Copiar para WhatsApp'}
         </button>
@@ -111,7 +129,7 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
         ))}
       </div>
 
-      <pre className="ticket-print-area">{textoTicket}</pre>
+      <pre className="ticket-print-area">{textoParaImprimir}</pre>
     </div>
   )
 }
