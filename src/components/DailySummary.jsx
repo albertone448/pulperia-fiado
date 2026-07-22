@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { hoyFechaCR, toFechaCR, formatHora, formatColones } from '../utils/dateUtils'
+import { construirTicketResumenDia, copiarParaWhatsApp } from '../utils/ticket'
 
 export default function DailySummary({ clientes, transacciones, perfiles }) {
   const [fecha, setFecha] = useState(hoyFechaCR())
+  const [copiado, setCopiado] = useState(false)
 
   const transaccionesDelDia = useMemo(() => {
     return Object.entries(transacciones || {})
@@ -28,11 +30,42 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
     return { totalFiado, porMetodo, totalPagos }
   }, [transaccionesDelDia])
 
+  const fechaTextoLarga = new Date(fecha + 'T12:00:00').toLocaleDateString('es-CR', {
+    timeZone: 'America/Costa_Rica',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+
+  const textoTicket = construirTicketResumenDia({
+    fechaTexto: fechaTextoLarga,
+    totales,
+    movimientos: transaccionesDelDia,
+    clientes,
+  })
+
+  async function handleCopiar() {
+    const ok = await copiarParaWhatsApp(textoTicket)
+    if (ok) {
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    }
+  }
+
   return (
     <div className="contenedor">
       <div className="barra-superior">
         <label className="campo-label">Fecha</label>
         <input className="campo-input" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+      </div>
+
+      <div className="acciones-cliente">
+        <button className="btn-secundario" type="button" onClick={() => window.print()}>
+          Imprimir
+        </button>
+        <button className="btn-secundario" type="button" onClick={handleCopiar}>
+          {copiado ? 'Copiado ✓' : 'Copiar para WhatsApp'}
+        </button>
       </div>
 
       <div className="tarjetas-resumen">
@@ -77,6 +110,8 @@ export default function DailySummary({ clientes, transacciones, perfiles }) {
           </div>
         ))}
       </div>
+
+      <pre className="ticket-print-area">{textoTicket}</pre>
     </div>
   )
 }

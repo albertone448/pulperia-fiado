@@ -643,6 +643,39 @@ select {
   color: var(--color-morado-oscuro);
 }
 
+/* ---------- Impresión tipo tiquete de facturero ---------- */
+
+.ticket-print-area {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .ticket-print-area,
+  .ticket-print-area * {
+    visibility: visible;
+  }
+  .ticket-print-area {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    padding: 6px;
+    margin: 0;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 2mm;
+  }
+}
+
 /* ---------- Selector de perfiles ---------- */
 
 .selector-perfiles {

@@ -7,6 +7,7 @@ import ProfileSelector from './components/ProfileSelector'
 import ClientList from './components/ClientList'
 import ClientDetail from './components/ClientDetail'
 import DailySummary from './components/DailySummary'
+import Statistics from './components/Statistics'
 
 // Después de este tiempo sin tocar nada, se vuelve a pedir el perfil (PIN).
 // No cierra la sesión de Firebase, solo "desloguea" el perfil activo.
@@ -114,6 +115,12 @@ export default function App() {
           >
             Resumen del día
           </button>
+          <button
+            className={vista === 'estadisticas' ? 'tab tab-activo' : 'tab'}
+            onClick={() => setVista('estadisticas')}
+          >
+            Estadísticas
+          </button>
         </nav>
       )}
 
@@ -133,11 +140,17 @@ export default function App() {
             transacciones={transacciones}
             onAbrirCliente={(id) => setClienteAbiertoId(id)}
           />
-        ) : (
+        ) : vista === 'resumen' ? (
           <DailySummary
             clientes={clientes}
             transacciones={transacciones}
             perfiles={perfiles}
+          />
+        ) : (
+          <Statistics
+            clientes={clientes}
+            transacciones={transacciones}
+            onAbrirCliente={(id) => setClienteAbiertoId(id)}
           />
         )}
       </main>

@@ -3,6 +3,7 @@ import { ref, update } from 'firebase/database'
 import { db } from '../firebase'
 import { calcularDeuda, transaccionesDeCliente } from '../utils/deudas'
 import { formatColones, formatFechaHora } from '../utils/dateUtils'
+import { construirTicketCliente, copiarParaWhatsApp } from '../utils/ticket'
 import NewChargeModal from './NewChargeModal'
 import NewPaymentModal from './NewPaymentModal'
 import EditTransactionModal from './EditTransactionModal'
@@ -16,11 +17,21 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
   const [editandoCliente, setEditandoCliente] = useState(false)
   const [editandoLimite, setEditandoLimite] = useState(false)
   const [nuevoLimite, setNuevoLimite] = useState(String(cliente.limite ?? LIMITE_DEFAULT))
+  const [copiado, setCopiado] = useState(false)
 
   const deuda = calcularDeuda(transacciones, clienteId)
   const limite = cliente.limite ?? LIMITE_DEFAULT
   const excedido = deuda > limite
   const historial = transaccionesDeCliente(transacciones, clienteId)
+  const textoTicket = construirTicketCliente({ cliente, deuda, limite, historial })
+
+  async function handleCopiar() {
+    const ok = await copiarParaWhatsApp(textoTicket)
+    if (ok) {
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    }
+  }
 
   function guardarLimite() {
     update(ref(db, `clientes/${clienteId}`), { limite: Number(nuevoLimite) || LIMITE_DEFAULT })
@@ -87,6 +98,15 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         </button>
       </div>
 
+      <div className="acciones-cliente">
+        <button className="btn-secundario" type="button" onClick={() => window.print()}>
+          Imprimir
+        </button>
+        <button className="btn-secundario" type="button" onClick={handleCopiar}>
+          {copiado ? 'Copiado ✓' : 'Copiar para WhatsApp'}
+        </button>
+      </div>
+
       <h3 className="subtitulo-historial">Historial</h3>
       <div className="lista-historial">
         {historial.length === 0 && <p className="texto-vacio">Todavía no hay movimientos.</p>}
@@ -143,6 +163,8 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
           onCerrar={() => setEditandoCliente(false)}
         />
       )}
+
+      <pre className="ticket-print-area">{textoTicket}</pre>
     </div>
   )
 }
