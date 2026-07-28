@@ -643,6 +643,17 @@ select {
   color: var(--color-morado-oscuro);
 }
 
+.estadisticas-cliente {
+  margin-top: 20px;
+}
+
+.tarjeta-resumen-valor-chica {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-morado-oscuro);
+}
+
 /* ---------- Impresión tipo tiquete de facturero ---------- */
 
 .ticket-print-area {

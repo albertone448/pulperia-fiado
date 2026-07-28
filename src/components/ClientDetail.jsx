@@ -8,6 +8,7 @@ import NewChargeModal from './NewChargeModal'
 import NewPaymentModal from './NewPaymentModal'
 import EditTransactionModal from './EditTransactionModal'
 import EditClientModal from './EditClientModal'
+import ClientStats from './ClientStats'
 
 const LIMITE_DEFAULT = 50000
 
@@ -88,6 +89,8 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
           </button>
         )}
       </div>
+
+      <ClientStats cliente={cliente} clienteId={clienteId} transacciones={transacciones} />
 
       <div className="acciones-cliente">
         <button className="btn-primario" onClick={() => setModal('cargo')}>

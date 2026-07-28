@@ -43,3 +43,43 @@ export function calcularClientesSinPagar(clientes, transacciones) {
     .filter(Boolean)
     .sort((a, b) => b.dias - a.dias)
 }
+
+// Estadísticas propias de un solo cliente, para mostrar en su ficha.
+export function calcularEstadisticasCliente(transacciones, clienteId) {
+  const historialAsc = Object.values(transacciones || {})
+    .filter((t) => t.clienteId === clienteId)
+    .sort((a, b) => a.timestamp - b.timestamp)
+
+  let saldo = 0
+  let ultimoCero = null
+  let totalFiadoHistorico = 0
+  let totalPagadoHistorico = 0
+  let cantidadCompras = 0
+  let cantidadPagos = 0
+
+  for (const t of historialAsc) {
+    if (t.tipo === 'cargo') {
+      saldo += Number(t.monto) || 0
+      totalFiadoHistorico += Number(t.monto) || 0
+      cantidadCompras += 1
+    } else if (t.tipo === 'pago') {
+      saldo -= Number(t.monto) || 0
+      totalPagadoHistorico += Number(t.monto) || 0
+      cantidadPagos += 1
+    }
+    if (saldo === 0) ultimoCero = t.timestamp
+  }
+
+  const primerMovimiento = historialAsc[0]?.timestamp || null
+  const ultimoMovimiento = historialAsc[historialAsc.length - 1]?.timestamp || null
+
+  return {
+    ultimoCero,
+    totalFiadoHistorico,
+    totalPagadoHistorico,
+    cantidadCompras,
+    cantidadPagos,
+    primerMovimiento,
+    ultimoMovimiento,
+  }
+}
