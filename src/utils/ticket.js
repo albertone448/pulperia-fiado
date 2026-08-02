@@ -1,6 +1,6 @@
 import { formatColones, formatFechaHora, formatHora } from './dateUtils'
 
-const ANCHO = 32 // ancho típico de una impresora de facturero angosta
+const ANCHO = 42 // ancho típico de una impresora térmica de 80mm
 const LINEA = '-'.repeat(ANCHO)
 
 // Arma una fila con texto a la izquierda y un valor a la derecha, tipo tiquete.
@@ -84,20 +84,28 @@ export function construirTicketResumenDia({ fechaTexto, totales, movimientos, cl
 
 // ---------- Detalle de un cliente ----------
 
-export function construirTicketCliente({ cliente, deuda, limite, historial }) {
+export function construirTicketCliente({ cliente, deuda, historial, ultimoCero }) {
+  const historialAMostrar = ultimoCero
+    ? historial.filter(([, t]) => t.timestamp > ultimoCero)
+    : historial
+
   const lineas = []
   lineas.push(centrado('MINISUPER EL PUENTE'))
   lineas.push(centrado(cliente.nombre))
   if (cliente.telefono) lineas.push(centrado(cliente.telefono))
   lineas.push(LINEA)
   lineas.push(fila('DEBE:', formatColones(deuda)))
-  lineas.push(fila('Limite:', formatColones(limite)))
   lineas.push(LINEA)
+  if (ultimoCero) {
+    lineas.push(`Cuenta en cero el: ${formatFechaHora(ultimoCero)}`)
+    lineas.push('(se muestra solo lo de despues)')
+    lineas.push(LINEA)
+  }
   lineas.push('HISTORIAL (mas reciente primero)')
-  if (historial.length === 0) {
+  if (historialAMostrar.length === 0) {
     lineas.push('(sin movimientos)')
   }
-  for (const [, t] of historial) {
+  for (const [, t] of historialAMostrar) {
     const signo = t.tipo === 'cargo' ? '+' : '-'
     lineas.push(formatFechaHora(t.timestamp))
     lineas.push(fila('  ' + (t.descripcion?.trim() || (t.tipo === 'cargo' ? 'Compra' : 'Pago')), signo + formatColones(t.monto)))

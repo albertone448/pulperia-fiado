@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ref, update } from 'firebase/database'
 import { db } from '../firebase'
-import { calcularDeuda, transaccionesDeCliente } from '../utils/deudas'
+import { calcularDeuda, transaccionesDeCliente, calcularEstadisticasCliente } from '../utils/deudas'
 import { formatColones, formatFechaHora } from '../utils/dateUtils'
 import { construirTicketCliente, copiarParaWhatsApp } from '../utils/ticket'
 import NewChargeModal from './NewChargeModal'
@@ -24,7 +24,13 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
   const limite = cliente.limite ?? LIMITE_DEFAULT
   const excedido = deuda > limite
   const historial = transaccionesDeCliente(transacciones, clienteId)
-  const textoTicket = construirTicketCliente({ cliente, deuda, limite, historial })
+  const estadisticasCliente = calcularEstadisticasCliente(transacciones, clienteId)
+  const textoTicket = construirTicketCliente({
+    cliente,
+    deuda,
+    historial,
+    ultimoCero: estadisticasCliente.ultimoCero,
+  })
 
   async function handleCopiar() {
     const ok = await copiarParaWhatsApp(textoTicket)

@@ -673,12 +673,13 @@ select {
     position: absolute;
     top: 0;
     left: 0;
-    width: 280px;
+    width: 76mm;
     font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: 11px;
+    line-height: 1.35;
     white-space: pre-wrap;
-    padding: 6px;
+    word-break: break-word;
+    padding: 0 2mm;
     margin: 0;
   }
   @page {
