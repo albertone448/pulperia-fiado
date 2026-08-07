@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ref, push, update } from 'firebase/database'
 import { db } from '../firebase'
 import { formatColones } from '../utils/dateUtils'
+import { calcularEstadoLimite } from '../utils/deudas'
 
 export default function NewChargeModal({ clienteId, perfilActivo, perfiles, deudaActual, limite, onCerrar }) {
   const [monto, setMonto] = useState('')
@@ -10,12 +11,19 @@ export default function NewChargeModal({ clienteId, perfilActivo, perfiles, deud
 
   const montoNum = Number(monto) || 0
   const proyeccion = deudaActual + montoNum
-  const vaAExceder = montoNum > 0 && proyeccion > limite
+  const { maximoPermitido, excedeLimite, bloqueado } = calcularEstadoLimite(proyeccion, limite)
+
+  const mostrarAvisoInformativo = montoNum > 0 && excedeLimite && !bloqueado
+  const mostrarBloqueo = montoNum > 0 && bloqueado
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!montoNum || montoNum <= 0) {
       setError('Poné un monto válido')
+      return
+    }
+    if (bloqueado) {
+      setError('Este monto no se puede guardar, pasa el límite permitido para este cliente.')
       return
     }
     const nuevoRef = push(ref(db, 'transacciones'))
@@ -47,10 +55,18 @@ export default function NewChargeModal({ clienteId, perfilActivo, perfiles, deud
           autoFocus
         />
 
-        {vaAExceder && (
+        {mostrarAvisoInformativo && (
           <p className="alerta-limite-inline">
             Con este monto el cliente quedaría debiendo {formatColones(proyeccion)}, que pasa su límite de{' '}
-            {formatColones(limite)}. Es solo informativo, igual podés guardarlo.
+            {formatColones(limite)}. Todavía está dentro del margen permitido, se puede guardar igual.
+          </p>
+        )}
+
+        {mostrarBloqueo && (
+          <p className="alerta-limite-bloqueada">
+            Con este monto el cliente quedaría debiendo {formatColones(proyeccion)}, que pasa el máximo permitido de{' '}
+            {formatColones(maximoPermitido)} (límite + margen). No se puede guardar así, bajá el monto o subí el
+            límite del cliente si corresponde.
           </p>
         )}
 
@@ -68,7 +84,7 @@ export default function NewChargeModal({ clienteId, perfilActivo, perfiles, deud
           <button className="btn-secundario" type="button" onClick={onCerrar}>
             Cancelar
           </button>
-          <button className="btn-primario" type="submit">
+          <button className="btn-primario" type="submit" disabled={mostrarBloqueo}>
             Guardar
           </button>
         </div>

@@ -26,6 +26,17 @@ export function calcularUltimoPago(transacciones, clienteId) {
   return ultimo
 }
 
+// El margen de tolerancia sobre el límite de crédito antes de bloquear de verdad.
+// Ej: límite 100,000 con 5% de margen deja pasar hasta 105,000 con solo un aviso.
+export const MARGEN_LIMITE = 0.05
+
+export function calcularEstadoLimite(deudaProyectada, limite) {
+  const maximoPermitido = limite * (1 + MARGEN_LIMITE)
+  const excedeLimite = deudaProyectada > limite
+  const bloqueado = deudaProyectada > maximoPermitido
+  return { maximoPermitido, excedeLimite, bloqueado }
+}
+
 // Ranking de clientes que deben algo, ordenados por más tiempo sin pagar primero.
 // Si un cliente nunca ha pagado, se cuenta desde que fue creado.
 // Los clientes con deuda 0 no aparecen (no tiene sentido "tiempo sin pagar" si no deben nada).

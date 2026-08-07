@@ -162,6 +162,8 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
           transaccion={editando[1]}
           perfilActivo={perfilActivo}
           perfiles={perfiles}
+          deudaActual={deuda}
+          limite={limite}
           onCerrar={() => setEditando(null)}
         />
       )}

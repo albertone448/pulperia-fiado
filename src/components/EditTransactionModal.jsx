@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ref, update, remove } from 'firebase/database'
 import { db } from '../firebase'
-import { formatFechaHora } from '../utils/dateUtils'
+import { formatFechaHora, formatColones } from '../utils/dateUtils'
+import { calcularEstadoLimite } from '../utils/deudas'
 
 const METODOS = ['efectivo', 'tarjeta', 'sinpe']
 
-export default function EditTransactionModal({ transaccionId, transaccion, perfilActivo, perfiles, onCerrar }) {
+export default function EditTransactionModal({ transaccionId, transaccion, perfilActivo, perfiles, deudaActual, limite, onCerrar }) {
   const esCargo = transaccion.tipo === 'cargo'
   const [descripcion, setDescripcion] = useState(transaccion.descripcion || '')
   const [monto, setMonto] = useState(String(transaccion.monto || ''))
@@ -14,6 +15,16 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
   )
   const [error, setError] = useState('')
   const [confirmandoBorrado, setConfirmandoBorrado] = useState(false)
+
+  // Para saber si el nuevo monto pasa el límite, hay que "sacar" el efecto
+  // que tenía el monto original de este mismo cargo antes de sumar el nuevo.
+  const montoNumEditado = Number(monto) || 0
+  const deudaSinEsteCargo = esCargo ? deudaActual - (transaccion.monto || 0) : deudaActual
+  const proyeccion = deudaSinEsteCargo + montoNumEditado
+  const { maximoPermitido, excedeLimite, bloqueado } =
+    esCargo && limite != null ? calcularEstadoLimite(proyeccion, limite) : { excedeLimite: false, bloqueado: false }
+  const mostrarAvisoInformativo = esCargo && montoNumEditado > 0 && excedeLimite && !bloqueado
+  const mostrarBloqueo = esCargo && montoNumEditado > 0 && bloqueado
 
   function actualizarMetodo(i, campo, valor) {
     setMetodos((prev) => prev.map((m, idx) => (idx === i ? { ...m, [campo]: valor } : m)))
@@ -31,6 +42,10 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
       const montoNum = Number(monto)
       if (!montoNum || montoNum <= 0) {
         setError('Poné un monto válido')
+        return
+      }
+      if (bloqueado) {
+        setError('Este monto no se puede guardar, pasa el límite permitido para este cliente.')
         return
       }
       cambios.descripcion = descripcion.trim() || ''
@@ -81,6 +96,20 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
             />
+
+            {mostrarAvisoInformativo && (
+              <p className="alerta-limite-inline">
+                Con este monto el cliente quedaría debiendo {formatColones(proyeccion)}, que pasa su límite de{' '}
+                {formatColones(limite)}. Todavía está dentro del margen permitido, se puede guardar igual.
+              </p>
+            )}
+
+            {mostrarBloqueo && (
+              <p className="alerta-limite-bloqueada">
+                Con este monto el cliente quedaría debiendo {formatColones(proyeccion)}, que pasa el máximo
+                permitido de {formatColones(maximoPermitido)} (límite + margen). No se puede guardar así.
+              </p>
+            )}
 
             <label className="campo-label">Nota (opcional)</label>
             <input className="campo-input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
@@ -134,7 +163,7 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
             <button className="btn-secundario" type="button" onClick={onCerrar}>
               Cancelar
             </button>
-            <button className="btn-primario" type="submit">
+            <button className="btn-primario" type="submit" disabled={mostrarBloqueo}>
               Guardar
             </button>
           </div>
