@@ -1,16 +1,40 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { calcularClientesSinPagar, calcularClientesPorUltimoCero } from '../utils/deudas'
 import { formatColones } from '../utils/dateUtils'
 
-export default function Statistics({ clientes, transacciones, onAbrirCliente }) {
-  const ranking = useMemo(
-    () => calcularClientesSinPagar(clientes, transacciones),
-    [clientes, transacciones]
-  )
+// Cada criterio de orden vive acá. Para agregar uno nuevo en el futuro,
+// solo hay que sumar un objeto más a esta lista, no hay que tocar el resto
+// de la pantalla.
+const CRITERIOS = [
+  {
+    id: 'sinPagar',
+    etiqueta: 'Más tiempo sin pagar',
+    etiquetaPromedio: 'Promedio de días sin pagar',
+    calcular: (clientes, transacciones) =>
+      calcularClientesSinPagar(clientes, transacciones).map((r) => ({
+        ...r,
+        detalle: r.ultimoPago ? `${r.dias} días sin pagar` : `Nunca ha pagado (${r.dias} días)`,
+      })),
+  },
+  {
+    id: 'sinCero',
+    etiqueta: 'Más tiempo sin dejar la cuenta en cero',
+    etiquetaPromedio: 'Promedio de días sin llegar a cero',
+    calcular: (clientes, transacciones) =>
+      calcularClientesPorUltimoCero(clientes, transacciones).map((r) => ({
+        ...r,
+        detalle: r.ultimoCero ? `${r.dias} días sin dejarla en cero` : `Nunca la ha dejado en cero (${r.dias} días)`,
+      })),
+  },
+]
 
-  const rankingPorCero = useMemo(
-    () => calcularClientesPorUltimoCero(clientes, transacciones),
-    [clientes, transacciones]
+export default function Statistics({ clientes, transacciones, onAbrirCliente }) {
+  const [criterioId, setCriterioId] = useState(CRITERIOS[0].id)
+  const criterio = CRITERIOS.find((c) => c.id === criterioId) || CRITERIOS[0]
+
+  const ranking = useMemo(
+    () => criterio.calcular(clientes, transacciones),
+    [criterio, clientes, transacciones]
   )
 
   const promedioDias = useMemo(() => {
@@ -27,41 +51,35 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
           <span className="tarjeta-resumen-valor">{ranking.length}</span>
         </div>
         <div className="tarjeta-resumen tarjeta-resumen-destacada">
-          <span className="tarjeta-resumen-label">Promedio de dias sin pagar</span>
+          <span className="tarjeta-resumen-label">{criterio.etiquetaPromedio}</span>
           <span className="tarjeta-resumen-valor">{promedioDias}</span>
         </div>
       </div>
 
-      <h3 className="subtitulo-historial">Más tiempo sin pagar</h3>
+      <div className="selector-criterio">
+        <label className="campo-label">Ordenar por</label>
+        <select
+          className="campo-input campo-select campo-select-ancho"
+          value={criterioId}
+          onChange={(e) => setCriterioId(e.target.value)}
+        >
+          {CRITERIOS.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="lista-historial">
         {ranking.length === 0 && (
           <p className="texto-vacio">No hay clientes debiendo en este momento.</p>
         )}
-        {ranking.map(({ id, cliente, deuda, dias, ultimoPago }) => (
+        {ranking.map(({ id, cliente, deuda, detalle }) => (
           <button key={id} className="fila-historial" onClick={() => onAbrirCliente(id)}>
             <div className="fila-historial-info">
               <span className="fila-historial-desc">{cliente.nombre}</span>
-              <span className="fila-historial-fecha">
-                {ultimoPago ? `${dias} dias sin pagar` : `Nunca ha pagado (${dias} dias)`}
-              </span>
-            </div>
-            <span className="monto-deuda">{formatColones(deuda)}</span>
-          </button>
-        ))}
-      </div>
-
-      <h3 className="subtitulo-historial">Más tiempo sin dejar la cuenta en cero</h3>
-      <div className="lista-historial">
-        {rankingPorCero.length === 0 && (
-          <p className="texto-vacio">No hay clientes debiendo en este momento.</p>
-        )}
-        {rankingPorCero.map(({ id, cliente, deuda, dias, ultimoCero }) => (
-          <button key={id} className="fila-historial" onClick={() => onAbrirCliente(id)}>
-            <div className="fila-historial-info">
-              <span className="fila-historial-desc">{cliente.nombre}</span>
-              <span className="fila-historial-fecha">
-                {ultimoCero ? `${dias} dias sin dejarla en cero` : `Nunca la ha dejado en cero (${dias} dias)`}
-              </span>
+              <span className="fila-historial-fecha">{detalle}</span>
             </div>
             <span className="monto-deuda">{formatColones(deuda)}</span>
           </button>

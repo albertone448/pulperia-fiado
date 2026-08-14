@@ -110,6 +110,14 @@ select {
   flex: 0 0 130px;
 }
 
+.campo-select-ancho {
+  width: 100%;
+}
+
+.selector-criterio {
+  margin: 16px 0 18px;
+}
+
 .campo-limite-inline {
   display: inline-block;
   width: 120px;
