@@ -1,10 +1,15 @@
 import { useMemo } from 'react'
-import { calcularClientesSinPagar } from '../utils/deudas'
+import { calcularClientesSinPagar, calcularClientesPorUltimoCero } from '../utils/deudas'
 import { formatColones } from '../utils/dateUtils'
 
 export default function Statistics({ clientes, transacciones, onAbrirCliente }) {
   const ranking = useMemo(
     () => calcularClientesSinPagar(clientes, transacciones),
+    [clientes, transacciones]
+  )
+
+  const rankingPorCero = useMemo(
+    () => calcularClientesPorUltimoCero(clientes, transacciones),
     [clientes, transacciones]
   )
 
@@ -38,6 +43,24 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
               <span className="fila-historial-desc">{cliente.nombre}</span>
               <span className="fila-historial-fecha">
                 {ultimoPago ? `${dias} dias sin pagar` : `Nunca ha pagado (${dias} dias)`}
+              </span>
+            </div>
+            <span className="monto-deuda">{formatColones(deuda)}</span>
+          </button>
+        ))}
+      </div>
+
+      <h3 className="subtitulo-historial">Más tiempo sin dejar la cuenta en cero</h3>
+      <div className="lista-historial">
+        {rankingPorCero.length === 0 && (
+          <p className="texto-vacio">No hay clientes debiendo en este momento.</p>
+        )}
+        {rankingPorCero.map(({ id, cliente, deuda, dias, ultimoCero }) => (
+          <button key={id} className="fila-historial" onClick={() => onAbrirCliente(id)}>
+            <div className="fila-historial-info">
+              <span className="fila-historial-desc">{cliente.nombre}</span>
+              <span className="fila-historial-fecha">
+                {ultimoCero ? `${dias} dias sin dejarla en cero` : `Nunca la ha dejado en cero (${dias} dias)`}
               </span>
             </div>
             <span className="monto-deuda">{formatColones(deuda)}</span>

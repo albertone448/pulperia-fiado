@@ -55,6 +55,25 @@ export function calcularClientesSinPagar(clientes, transacciones) {
     .sort((a, b) => b.dias - a.dias)
 }
 
+// Muy parecido al de arriba, pero en vez de "cuándo pagó por última vez" mide
+// "cuándo fue la última vez que la cuenta quedó en cero". Son cosas distintas:
+// un cliente puede pagar seguido sin nunca saldar del todo lo que debe.
+// Solo incluye clientes que deben algo ahora mismo.
+export function calcularClientesPorUltimoCero(clientes, transacciones) {
+  const ahora = Date.now()
+  return Object.entries(clientes || {})
+    .map(([id, cliente]) => {
+      const deuda = calcularDeuda(transacciones, id)
+      if (deuda <= 0) return null
+      const stats = calcularEstadisticasCliente(transacciones, id)
+      const fechaBase = stats.ultimoCero || cliente.creado || ahora
+      const dias = Math.floor((ahora - fechaBase) / (1000 * 60 * 60 * 24))
+      return { id, cliente, deuda, ultimoCero: stats.ultimoCero, dias }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.dias - a.dias)
+}
+
 // Estadísticas propias de un solo cliente, para mostrar en su ficha.
 export function calcularEstadisticasCliente(transacciones, clienteId) {
   const historialAsc = Object.values(transacciones || {})
