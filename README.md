@@ -10,7 +10,7 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 
 ## Funcionalidades principales
 
-- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se eliminan, solo se editan, para preservar el historial completo.
+- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se borran físicamente: se pueden eliminar de forma lógica solo si su saldo está en cero (quedan marcados como inactivos y desaparecen de la lista principal), y se pueden restaurar en cualquier momento desde "Clientes eliminados", conservando siempre el historial completo.
 - **Registro de compras a crédito (fiado)** y **pagos**, estos últimos divisibles entre varios métodos (efectivo, tarjeta, SINPE) dentro de una misma transacción.
 - **Control de límite de crédito con margen de tolerancia**: además del límite configurado por cliente, se permite un margen del 5% antes de bloquear la operación de verdad. Por debajo del límite no hay aviso; entre el límite y el límite+5% se muestra una alerta pero se permite guardar; por encima de ese margen la operación queda bloqueada. Esta validación aplica tanto al registrar una compra nueva como al editar una existente.
 - **Historial editable con trazabilidad**: cada transacción registra quién la creó y, si se modifica, quién la editó y cuándo.

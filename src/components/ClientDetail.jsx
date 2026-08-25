@@ -171,7 +171,9 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         <EditClientModal
           clienteId={clienteId}
           cliente={cliente}
+          deuda={deuda}
           onCerrar={() => setEditandoCliente(false)}
+          onEliminado={onVolver}
         />
       )}
 

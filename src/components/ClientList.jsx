@@ -2,16 +2,18 @@ import { useState, useMemo } from 'react'
 import { ref, push, update } from 'firebase/database'
 import { db } from '../firebase'
 import { calcularDeuda } from '../utils/deudas'
-import { formatColones } from '../utils/dateUtils'
+import { formatColones, formatFechaHora } from '../utils/dateUtils'
 
 const LIMITE_DEFAULT = 50000
 
 export default function ClientList({ clientes, transacciones, onAbrirCliente }) {
   const [busqueda, setBusqueda] = useState('')
   const [creando, setCreando] = useState(false)
+  const [viendoEliminados, setViendoEliminados] = useState(false)
 
   const listaOrdenada = useMemo(() => {
     return Object.entries(clientes || {})
+      .filter(([, cliente]) => !cliente.inactivo)
       .map(([id, cliente]) => ({
         id,
         cliente,
@@ -23,7 +25,50 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
       .sort((a, b) => b.deuda - a.deuda)
   }, [clientes, transacciones, busqueda])
 
+  const eliminados = useMemo(() => {
+    return Object.entries(clientes || {})
+      .filter(([, cliente]) => cliente.inactivo)
+      .sort(([, a], [, b]) => (b.inactivoDesde || 0) - (a.inactivoDesde || 0))
+  }, [clientes])
+
   const totalGeneral = listaOrdenada.reduce((acc, c) => acc + c.deuda, 0)
+
+  function restaurarCliente(id) {
+    update(ref(db, `clientes/${id}`), { inactivo: null, inactivoDesde: null })
+  }
+
+  if (viendoEliminados) {
+    return (
+      <div className="contenedor">
+        <button className="btn-link" onClick={() => setViendoEliminados(false)}>
+          &larr; Volver a clientes
+        </button>
+        <h2 className="cliente-nombre-grande">Clientes eliminados</h2>
+
+        <div className="lista-clientes">
+          {eliminados.length === 0 && (
+            <p className="texto-vacio">No hay clientes eliminados.</p>
+          )}
+          {eliminados.map(([id, cliente]) => (
+            <div key={id} className="fila-cliente fila-cliente-eliminado">
+              <div className="fila-cliente-info">
+                <span className="fila-cliente-nombre">{cliente.nombre}</span>
+                {cliente.telefono && <span className="fila-cliente-telefono">{cliente.telefono}</span>}
+                {cliente.inactivoDesde && (
+                  <span className="texto-trazabilidad">
+                    Eliminado el {formatFechaHora(cliente.inactivoDesde)}
+                  </span>
+                )}
+              </div>
+              <button className="btn-secundario" type="button" onClick={() => restaurarCliente(id)}>
+                Restaurar
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="contenedor">
@@ -64,6 +109,12 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
           </button>
         ))}
       </div>
+
+      {eliminados.length > 0 && (
+        <button className="btn-link" onClick={() => setViendoEliminados(true)}>
+          Ver clientes eliminados ({eliminados.length})
+        </button>
+      )}
 
       {creando && <NuevoCliente onCerrar={() => setCreando(false)} />}
     </div>

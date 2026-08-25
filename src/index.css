@@ -194,6 +194,11 @@ select {
   cursor: pointer;
 }
 
+.btn-peligro-texto:disabled {
+  color: var(--color-texto-suave);
+  cursor: default;
+}
+
 .btn-ancho-fijo {
   margin-top: 0;
   white-space: nowrap;
@@ -376,6 +381,16 @@ select {
   color: var(--color-texto-suave);
   text-align: center;
   padding: 30px 0;
+}
+
+.fila-cliente-eliminado {
+  cursor: default;
+}
+
+.fila-cliente-eliminado .btn-secundario {
+  margin-top: 0;
+  padding: 8px 14px;
+  font-size: 14px;
 }
 
 /* ---------- Modal ---------- */
