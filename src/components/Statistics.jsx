@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { calcularClientesSinPagar, calcularClientesPorUltimoCero } from '../utils/deudas'
+import { calcularClientesSinPagar, calcularClientesPorUltimoCero, calcularDeuda } from '../utils/deudas'
 import { formatColones } from '../utils/dateUtils'
 
 // Cada criterio de orden vive acá. Para agregar uno nuevo en el futuro,
@@ -33,16 +33,33 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
   const [orden, setOrden] = useState('desc') // 'desc' = más días primero, 'asc' = menos días primero
   const criterio = CRITERIOS.find((c) => c.id === criterioId) || CRITERIOS[0]
 
+  // Los clientes suspendidos se sacan del ranking principal: ya se sabe que no
+  // están pagando, así que no aportan nada a "detectar algo inusual" entre los
+  // activos. Su deuda se muestra aparte, sin mezclarse en el orden ni el promedio.
+  const clientesActivos = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(clientes || {}).filter(([, cliente]) => !cliente.suspendido)
+    )
+  }, [clientes])
+
   const ranking = useMemo(() => {
-    const lista = criterio.calcular(clientes, transacciones)
+    const lista = criterio.calcular(clientesActivos, transacciones)
     return orden === 'asc' ? [...lista].reverse() : lista
-  }, [criterio, clientes, transacciones, orden])
+  }, [criterio, clientesActivos, transacciones, orden])
 
   const promedioDias = useMemo(() => {
     if (ranking.length === 0) return 0
     const suma = ranking.reduce((acc, r) => acc + r.dias, 0)
     return Math.round(suma / ranking.length)
   }, [ranking])
+
+  const suspendidosConDeuda = useMemo(() => {
+    return Object.entries(clientes || {})
+      .filter(([, cliente]) => cliente.suspendido)
+      .map(([id, cliente]) => ({ id, cliente, deuda: calcularDeuda(transacciones, id) }))
+      .filter((c) => c.deuda > 0)
+      .sort((a, b) => b.deuda - a.deuda)
+  }, [clientes, transacciones])
 
   return (
     <div className="contenedor">
@@ -96,6 +113,22 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
           </button>
         ))}
       </div>
+
+      {suspendidosConDeuda.length > 0 && (
+        <>
+          <h3 className="subtitulo-historial">Clientes suspendidos con saldo pendiente</h3>
+          <div className="lista-historial">
+            {suspendidosConDeuda.map(({ id, cliente, deuda }) => (
+              <button key={id} className="fila-historial" onClick={() => onAbrirCliente(id)}>
+                <div className="fila-historial-info">
+                  <span className="fila-historial-desc">{cliente.nombre}</span>
+                </div>
+                <span className="monto-deuda">{formatColones(deuda)}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

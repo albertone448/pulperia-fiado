@@ -23,6 +23,7 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
   const deuda = calcularDeuda(transacciones, clienteId)
   const limite = cliente.limite ?? LIMITE_DEFAULT
   const excedido = deuda > limite
+  const estaSuspendido = !!cliente.suspendido
   const historial = transaccionesDeCliente(transacciones, clienteId)
   const estadisticasCliente = calcularEstadisticasCliente(transacciones, clienteId)
   const textoTicket = construirTicketCliente({
@@ -73,6 +74,13 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         </p>
       )}
 
+      {estaSuspendido && (
+        <p className="alerta-suspendido">
+          Cliente suspendido{cliente.suspendidoDesde ? ` desde ${formatFechaHora(cliente.suspendidoDesde)}` : ''}.
+          No se le pueden anotar compras nuevas, pero sí se le pueden registrar pagos.
+        </p>
+      )}
+
       <div className="limite-editor">
         {editandoLimite ? (
           <>
@@ -99,7 +107,12 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
       <ClientStats cliente={cliente} clienteId={clienteId} transacciones={transacciones} />
 
       <div className="acciones-cliente">
-        <button className="btn-primario" onClick={() => setModal('cargo')}>
+        <button
+          className="btn-primario"
+          onClick={() => setModal('cargo')}
+          disabled={estaSuspendido}
+          title={estaSuspendido ? 'Reactivá al cliente para poder anotarle compras' : undefined}
+        >
           + Anotar compra
         </button>
         <button className="btn-secundario" onClick={() => setModal('pago')}>

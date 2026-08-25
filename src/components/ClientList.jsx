@@ -9,11 +9,11 @@ const LIMITE_DEFAULT = 50000
 export default function ClientList({ clientes, transacciones, onAbrirCliente }) {
   const [busqueda, setBusqueda] = useState('')
   const [creando, setCreando] = useState(false)
-  const [viendoEliminados, setViendoEliminados] = useState(false)
+  const [viendoArchivo, setViendoArchivo] = useState(false)
 
   const listaOrdenada = useMemo(() => {
     return Object.entries(clientes || {})
-      .filter(([, cliente]) => !cliente.inactivo)
+      .filter(([, cliente]) => !cliente.inactivo && !cliente.suspendido)
       .map(([id, cliente]) => ({
         id,
         cliente,
@@ -25,26 +25,61 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
       .sort((a, b) => b.deuda - a.deuda)
   }, [clientes, transacciones, busqueda])
 
+  const suspendidos = useMemo(() => {
+    return Object.entries(clientes || {})
+      .filter(([, cliente]) => cliente.suspendido)
+      .map(([id, cliente]) => ({
+        id,
+        cliente,
+        deuda: calcularDeuda(transacciones, id),
+      }))
+      .sort((a, b) => (b.cliente.suspendidoDesde || 0) - (a.cliente.suspendidoDesde || 0))
+  }, [clientes, transacciones])
+
   const eliminados = useMemo(() => {
     return Object.entries(clientes || {})
       .filter(([, cliente]) => cliente.inactivo)
       .sort(([, a], [, b]) => (b.inactivoDesde || 0) - (a.inactivoDesde || 0))
   }, [clientes])
 
-  const totalGeneral = listaOrdenada.reduce((acc, c) => acc + c.deuda, 0)
+  const totalActivos = listaOrdenada.reduce((acc, c) => acc + c.deuda, 0)
+  const totalSuspendidos = suspendidos.reduce((acc, c) => acc + c.deuda, 0)
+  const totalGeneral = totalActivos + totalSuspendidos
 
   function restaurarCliente(id) {
     update(ref(db, `clientes/${id}`), { inactivo: null, inactivoDesde: null })
   }
 
-  if (viendoEliminados) {
+  if (viendoArchivo) {
     return (
       <div className="contenedor">
-        <button className="btn-link" onClick={() => setViendoEliminados(false)}>
+        <button className="btn-link" onClick={() => setViendoArchivo(false)}>
           &larr; Volver a clientes
         </button>
-        <h2 className="cliente-nombre-grande">Clientes eliminados</h2>
+        <h2 className="cliente-nombre-grande">Suspendidos y eliminados</h2>
 
+        <h3 className="subtitulo-historial">Suspendidos</h3>
+        <div className="lista-clientes">
+          {suspendidos.length === 0 && (
+            <p className="texto-vacio">No hay clientes suspendidos.</p>
+          )}
+          {suspendidos.map(({ id, cliente, deuda }) => (
+            <button key={id} className="fila-cliente" onClick={() => onAbrirCliente(id)}>
+              <div className="fila-cliente-info">
+                <span className="fila-cliente-nombre">{cliente.nombre}</span>
+                {cliente.telefono && <span className="fila-cliente-telefono">{cliente.telefono}</span>}
+                {cliente.suspendidoDesde && (
+                  <span className="texto-trazabilidad">
+                    Suspendido el {formatFechaHora(cliente.suspendidoDesde)}
+                  </span>
+                )}
+              </div>
+              <span className="monto-deuda">{formatColones(deuda)}</span>
+            </button>
+          ))}
+        </div>
+
+        <h3 className="subtitulo-historial">Eliminados</h3>
         <div className="lista-clientes">
           {eliminados.length === 0 && (
             <p className="texto-vacio">No hay clientes eliminados.</p>
@@ -86,6 +121,11 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
 
       <div className="resumen-total-general">
         Total fiado: <strong>{formatColones(totalGeneral)}</strong>
+        {totalSuspendidos > 0 && (
+          <p className="resumen-total-detalle">
+            De los cuales {formatColones(totalSuspendidos)} están en cuentas suspendidas
+          </p>
+        )}
       </div>
 
       <div className="lista-clientes">
@@ -110,9 +150,9 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
         ))}
       </div>
 
-      {eliminados.length > 0 && (
-        <button className="btn-link" onClick={() => setViendoEliminados(true)}>
-          Ver clientes eliminados ({eliminados.length})
+      {(suspendidos.length > 0 || eliminados.length > 0) && (
+        <button className="btn-link" onClick={() => setViendoArchivo(true)}>
+          Ver suspendidos y eliminados ({suspendidos.length + eliminados.length})
         </button>
       )}
 

@@ -337,6 +337,12 @@ select {
   font-size: 16px;
 }
 
+.resumen-total-detalle {
+  font-size: 12px;
+  margin: 4px 0 0;
+  opacity: 0.85;
+}
+
 .lista-clientes {
   display: flex;
   flex-direction: column;
@@ -463,6 +469,18 @@ select {
   margin-top: 20px;
 }
 
+.modal-acciones-secundarias {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.modal-acciones-secundarias .btn-link {
+  padding: 6px 0;
+}
+
 .modal-acciones-tres {
   justify-content: space-between;
 }
@@ -539,6 +557,15 @@ select {
 .alerta-limite {
   background: var(--color-rojo-claro);
   color: var(--color-rojo);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.alerta-suspendido {
+  background: var(--color-morado-claro);
+  color: var(--color-morado-oscuro);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;

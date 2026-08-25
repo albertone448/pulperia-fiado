@@ -10,13 +10,15 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 
 ## Funcionalidades principales
 
-- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se borran físicamente: se pueden eliminar de forma lógica solo si su saldo está en cero (quedan marcados como inactivos y desaparecen de la lista principal), y se pueden restaurar en cualquier momento desde "Clientes eliminados", conservando siempre el historial completo.
+- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se borran físicamente. Hay dos estados reversibles, gestionables desde "Editar datos del cliente":
+  - **Eliminado**: solo si el saldo está en cero. Desaparece de la lista principal y se restaura en cualquier momento desde "Suspendidos y eliminados".
+  - **Suspendido**: para clientes que dejaron de venir pero podrían volver, tengan o no deuda pendiente. Desaparece de la lista principal pero se puede seguir abriendo su ficha, ver su historial y registrarle pagos con normalidad; lo único que se bloquea es anotarle compras nuevas, hasta que se reactive.
 - **Registro de compras a crédito (fiado)** y **pagos**, estos últimos divisibles entre varios métodos (efectivo, tarjeta, SINPE) dentro de una misma transacción.
 - **Control de límite de crédito con margen de tolerancia**: además del límite configurado por cliente, se permite un margen del 5% antes de bloquear la operación de verdad. Por debajo del límite no hay aviso; entre el límite y el límite+5% se muestra una alerta pero se permite guardar; por encima de ese margen la operación queda bloqueada. Esta validación aplica tanto al registrar una compra nueva como al editar una existente.
 - **Historial editable con trazabilidad**: cada transacción registra quién la creó y, si se modifica, quién la editó y cuándo.
 - **Perfiles con PIN**: en vez de una cuenta por persona, hay un único login para la tienda y perfiles internos (nombre + PIN de 4 dígitos) para identificar quién hizo cada acción, con cierre automático de perfil tras 5 minutos de inactividad.
 - **Resumen del día**: totales de fiado y de pagos por método, con selector de fecha, para cuadrar caja.
-- **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero), pensado para agregar más criterios fácilmente en el futuro. También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, etc.).
+- **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero) y un botón para invertir el orden (ascendente/descendente), pensado para agregar más criterios fácilmente en el futuro. Los clientes suspendidos no entran en este ranking (para no distorsionar el promedio con cuentas que ya se sabe que están detenidas); si tienen saldo pendiente aparecen aparte, en un bloque separado. También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, etc.).
 - **Impresión y envío por WhatsApp**: tanto el resumen del día como el detalle de un cliente se pueden imprimir en una impresora térmica de 80mm, o copiar como texto formateado para compartir manualmente por WhatsApp.
 
 ## Arquitectura
