@@ -120,6 +120,10 @@ Dado que la app usa un único login compartido en vez de cuentas individuales po
 
 Cualquier sesión autenticada (siempre la misma cuenta) tiene acceso completo a la base. La capa de "quién hizo qué" se resuelve a nivel de aplicación con los perfiles internos, no con reglas de Firebase por usuario.
 
+## Respaldo de datos
+
+Realtime Database tiene habilitada la copia de seguridad automática diaria, configurada directamente desde la consola de Firebase (Realtime Database → Copias de seguridad), no desde código ni desde este repositorio. Cada backup exporta los datos y las reglas a un bucket de Google Cloud Storage (`pulperia-fiado-default-rtdb-backups`). También se puede disparar una copia manual desde la misma pantalla en cualquier momento.
+
 ## Ejecución en desarrollo
 
 ```bash
