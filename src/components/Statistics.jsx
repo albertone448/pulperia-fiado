@@ -8,7 +8,7 @@ import { formatColones } from '../utils/dateUtils'
 const CRITERIOS = [
   {
     id: 'sinPagar',
-    etiqueta: 'Más tiempo sin pagar',
+    etiqueta: 'Tiempo sin pagar',
     etiquetaPromedio: 'Promedio de días sin pagar',
     calcular: (clientes, transacciones) =>
       calcularClientesSinPagar(clientes, transacciones).map((r) => ({
@@ -18,7 +18,7 @@ const CRITERIOS = [
   },
   {
     id: 'sinCero',
-    etiqueta: 'Más tiempo sin dejar la cuenta en cero',
+    etiqueta: 'Tiempo sin dejar la cuenta en cero',
     etiquetaPromedio: 'Promedio de días sin llegar a cero',
     calcular: (clientes, transacciones) =>
       calcularClientesPorUltimoCero(clientes, transacciones).map((r) => ({
@@ -30,12 +30,13 @@ const CRITERIOS = [
 
 export default function Statistics({ clientes, transacciones, onAbrirCliente }) {
   const [criterioId, setCriterioId] = useState(CRITERIOS[0].id)
+  const [orden, setOrden] = useState('desc') // 'desc' = más días primero, 'asc' = menos días primero
   const criterio = CRITERIOS.find((c) => c.id === criterioId) || CRITERIOS[0]
 
-  const ranking = useMemo(
-    () => criterio.calcular(clientes, transacciones),
-    [criterio, clientes, transacciones]
-  )
+  const ranking = useMemo(() => {
+    const lista = criterio.calcular(clientes, transacciones)
+    return orden === 'asc' ? [...lista].reverse() : lista
+  }, [criterio, clientes, transacciones, orden])
 
   const promedioDias = useMemo(() => {
     if (ranking.length === 0) return 0
@@ -58,17 +59,27 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
 
       <div className="selector-criterio">
         <label className="campo-label">Ordenar por</label>
-        <select
-          className="campo-input campo-select campo-select-ancho"
-          value={criterioId}
-          onChange={(e) => setCriterioId(e.target.value)}
-        >
-          {CRITERIOS.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.etiqueta}
-            </option>
-          ))}
-        </select>
+        <div className="selector-criterio-fila">
+          <select
+            className="campo-input campo-select campo-select-ancho"
+            value={criterioId}
+            onChange={(e) => setCriterioId(e.target.value)}
+          >
+            {CRITERIOS.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.etiqueta}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn-orden"
+            type="button"
+            onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))}
+            title={orden === 'desc' ? 'De más a menos días' : 'De menos a más días'}
+          >
+            {orden === 'desc' ? '↓' : '↑'}
+          </button>
+        </div>
       </div>
 
       <div className="lista-historial">

@@ -118,6 +118,29 @@ select {
   margin: 16px 0 18px;
 }
 
+.selector-criterio-fila {
+  display: flex;
+  gap: 8px;
+}
+
+.selector-criterio-fila .campo-select {
+  flex: 1;
+}
+
+.btn-orden {
+  flex: 0 0 44px;
+  background: #fff;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--color-morado);
+  cursor: pointer;
+}
+
+.btn-orden:hover {
+  border-color: var(--color-morado);
+}
+
 .campo-limite-inline {
   display: inline-block;
   width: 120px;
