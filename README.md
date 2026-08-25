@@ -1,32 +1,111 @@
-# Fiado - Mini Super
+# Sistema de Fiado — Minisúper El Puente
 
-Sistema de fiado para la pulpería. React + Vite + Firebase Realtime Database, hospedado gratis en Vercel.
+Aplicación web para llevar el control del crédito informal ("fiado") en una pulpería familiar en Costa Rica, reemplazando el clásico cuaderno de anotaciones en papel por un sistema digital simple, con trazabilidad completa y pensado para que lo use gente sin experiencia técnica.
 
-## Paso 1: Crear el proyecto en Firebase
+## El problema
 
-1. Andá a https://console.firebase.google.com y entrá con la cuenta de Google que va a administrar el proyecto.
-2. Click en "Agregar proyecto" (o "Add project"). Ponele un nombre, por ejemplo `pulperia-fiado`.
-3. Podés desactivar Google Analytics, no hace falta para este proyecto.
-4. Esperá a que se cree y entrá al panel del proyecto.
+En una pulpería de barrio es común que los clientes de confianza se lleven productos y los paguen después. Tradicionalmente esto se anota en un cuaderno físico, con los problemas de siempre: se puede perder, es difícil de auditar, no hay control de límites por cliente y no queda registro claro de quién anotó qué.
 
-## Paso 2: Activar Authentication (el login único)
+Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa del cuaderno, pero agregando control de límites de crédito, trazabilidad por persona, reportes y estadísticas.
 
-1. En el menú de la izquierda, entrá a **Build > Authentication**.
-2. Click en "Get started".
-3. En la pestaña "Sign-in method", activá el proveedor **Correo electrónico/contraseña** (Email/Password).
-4. Andá a la pestaña "Users" y click en "Add user".
-5. Ahí creás el único usuario que va a existir, por ejemplo:
-   - Correo: `minisuper@fiado.app` (no tiene que ser un correo real, Firebase no lo verifica)
-   - Contraseña: la que ustedes quieran usar para entrar
-6. Guardá ese correo y contraseña en un lugar seguro, es lo que van a usar para entrar a la página.
+## Funcionalidades principales
 
-## Paso 3: Activar Realtime Database
+- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se eliminan, solo se editan, para preservar el historial completo.
+- **Registro de compras a crédito (fiado)** y **pagos**, estos últimos divisibles entre varios métodos (efectivo, tarjeta, SINPE) dentro de una misma transacción.
+- **Control de límite de crédito con margen de tolerancia**: además del límite configurado por cliente, se permite un margen del 5% antes de bloquear la operación de verdad. Por debajo del límite no hay aviso; entre el límite y el límite+5% se muestra una alerta pero se permite guardar; por encima de ese margen la operación queda bloqueada. Esta validación aplica tanto al registrar una compra nueva como al editar una existente.
+- **Historial editable con trazabilidad**: cada transacción registra quién la creó y, si se modifica, quién la editó y cuándo.
+- **Perfiles con PIN**: en vez de una cuenta por persona, hay un único login para la tienda y perfiles internos (nombre + PIN de 4 dígitos) para identificar quién hizo cada acción, con cierre automático de perfil tras 5 minutos de inactividad.
+- **Resumen del día**: totales de fiado y de pagos por método, con selector de fecha, para cuadrar caja.
+- **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero), pensado para agregar más criterios fácilmente en el futuro. También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, etc.).
+- **Impresión y envío por WhatsApp**: tanto el resumen del día como el detalle de un cliente se pueden imprimir en una impresora térmica de 80mm, o copiar como texto formateado para compartir manualmente por WhatsApp.
 
-1. En el menú de la izquierda, entrá a **Build > Realtime Database**.
-2. Click en "Create Database".
-3. Elegí la ubicación (cualquiera cercana está bien, ej. `us-central1`).
-4. Cuando pregunte por las reglas de seguridad, elegí "Start in locked mode" (empezar bloqueado).
-5. Una vez creada, andá a la pestaña "Rules" y reemplazá el contenido por esto:
+## Arquitectura
+
+Aplicación 100% *serverless*: no hay backend propio. El frontend habla directamente con Firebase, que hace de base de datos y de sistema de autenticación al mismo tiempo.
+
+```
+┌─────────────────────┐        ┌──────────────────────────┐
+│  React + Vite (SPA)  │ ─────► │ Firebase Realtime DB       │
+│  hosteado en Vercel  │ ◄───── │ + Firebase Authentication  │
+└─────────────────────┘        └──────────────────────────┘
+```
+
+- **Autenticación**: un único usuario de Firebase Auth (correo/contraseña) protege toda la base de datos. Las reglas de seguridad de Realtime Database exigen `auth != null` para leer o escribir.
+- **Perfiles**: son un dato más dentro de la base (no son cuentas de Firebase Auth), usados únicamente para trazabilidad interna una vez que ya hay sesión iniciada.
+- **Sincronización en tiempo real**: la app se suscribe a los nodos de Firebase con `onValue`, así que los cambios se reflejan al instante en cualquier sesión abierta, sin recargar.
+- **Sin costo operativo**: Firebase (plan Spark) y Vercel (plan Hobby) se usan en sus niveles gratuitos.
+
+## Componentes del sistema
+
+Este ecosistema está compuesto por dos partes con ciclos de vida completamente independientes:
+
+### 1. Aplicación principal (este repositorio)
+
+La SPA de React descrita arriba: gestión de clientes, transacciones, estadísticas e impresión. Es lo único que se despliega en Vercel.
+
+### 2. [`whatsapp-fiado/`](./whatsapp-fiado) — Notificador de WhatsApp
+
+Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y envía un mensaje de WhatsApp automático al cliente cuando se le registra una compra o un pago.
+
+No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`whatsapp-fiado/README.md`](./whatsapp-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
+
+## Stack tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 18, Vite |
+| Estilos | CSS puro, sin frameworks de UI |
+| Backend / base de datos | Firebase Realtime Database |
+| Autenticación | Firebase Authentication |
+| Hosting | Vercel (despliegue automático desde GitHub) |
+
+## Estructura del proyecto
+
+```
+pulperia-fiado/
+├── src/
+│   ├── components/       # Componentes de React (una vista o modal cada uno)
+│   ├── utils/             # Lógica de negocio pura: cálculo de deudas, tickets, fechas
+│   ├── firebase.js        # Inicialización de Firebase a partir de variables de entorno
+│   ├── App.jsx             # Enrutamiento de alto nivel, sesión, perfiles e inactividad
+│   └── index.css           # Estilos globales
+├── whatsapp-fiado/         # Componente independiente (ver sección de arriba)
+├── index.html
+├── package.json
+└── vite.config.js
+```
+
+## Requisitos
+
+- Node.js 18 o superior
+- Un proyecto de Firebase con Authentication (correo/contraseña) y Realtime Database activados
+
+## Instalación
+
+```bash
+git clone https://github.com/<tu-usuario>/pulperia-fiado.git
+cd pulperia-fiado
+npm install
+cp .env.example .env
+```
+
+## Variables de entorno
+
+Completá `.env` con los datos de tu proyecto de Firebase (Configuración del proyecto → tus apps → configuración del SDK):
+
+```
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_DATABASE_URL=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+## Reglas de seguridad de Firebase
+
+Dado que la app usa un único login compartido en vez de cuentas individuales por usuario, las reglas de Realtime Database son intencionalmente simples:
 
 ```json
 {
@@ -37,87 +116,20 @@ Sistema de fiado para la pulpería. React + Vite + Firebase Realtime Database, h
 }
 ```
 
-Esto dice: solo alguien que haya iniciado sesión (con el correo y contraseña del Paso 2) puede leer o escribir datos. Click en "Publish" para guardar.
+Cualquier sesión autenticada (siempre la misma cuenta) tiene acceso completo a la base. La capa de "quién hizo qué" se resuelve a nivel de aplicación con los perfiles internos, no con reglas de Firebase por usuario.
 
-## Paso 4: Obtener las claves de configuración
-
-1. Andá al ícono de engranaje (arriba a la izquierda) > **Project settings**.
-2. Bajá hasta "Your apps" y click en el ícono `</>` (Web app).
-3. Ponele un apodo, ej. `pulperia-web`, y click en "Register app". No hace falta marcar lo de Firebase Hosting.
-4. Firebase te va a mostrar un bloque de código con un objeto `firebaseConfig`. Ahí están todos los valores que necesitás:
-   - `apiKey`
-   - `authDomain`
-   - `databaseURL`
-   - `projectId`
-   - `storageBucket`
-   - `messagingSenderId`
-   - `appId`
-
-Guardá esos valores, los vas a necesitar en el Paso 6.
-
-## Paso 5: Subir el código a GitHub
-
-1. Si no tenés cuenta en GitHub, creála en https://github.com
-2. Creá un repositorio nuevo (puede ser privado), por ejemplo `pulperia-fiado`.
-3. Descomprimí el ZIP de este proyecto en tu computadora.
-4. Abrí una terminal dentro de esa carpeta y corré:
+## Ejecución en desarrollo
 
 ```bash
-git init
-git add .
-git commit -m "Primera version del sistema de fiado"
-git branch -M main
-git remote add origin https://github.com/TU-USUARIO/pulperia-fiado.git
-git push -u origin main
-```
-
-(Cambiá `TU-USUARIO` por tu usuario de GitHub, y el nombre del repo si le pusiste otro).
-
-## Paso 6: Desplegar en Vercel
-
-1. Andá a https://vercel.com y entrá con tu cuenta de GitHub.
-2. Click en "Add New" > "Project".
-3. Elegí el repositorio `pulperia-fiado` que acabás de subir.
-4. Vercel detecta solo que es un proyecto de Vite, no hace falta cambiar nada en "Build settings".
-5. Antes de hacer click en "Deploy", abrí la sección "Environment Variables" y agregá una por una las 7 variables, usando los valores que sacaste del Paso 4:
-
-| Nombre | Valor |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | el `apiKey` |
-| `VITE_FIREBASE_AUTH_DOMAIN` | el `authDomain` |
-| `VITE_FIREBASE_DATABASE_URL` | el `databaseURL` |
-| `VITE_FIREBASE_PROJECT_ID` | el `projectId` |
-| `VITE_FIREBASE_STORAGE_BUCKET` | el `storageBucket` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | el `messagingSenderId` |
-| `VITE_FIREBASE_APP_ID` | el `appId` |
-
-6. Click en "Deploy". En un par de minutos te da un link, algo como `pulperia-fiado.vercel.app`.
-
-Ese link es el que van a usar todos los días en la caja. Podés guardarlo como acceso directo en el escritorio o como marcador en el navegador.
-
-## Paso 7: Primer uso
-
-1. Entrá al link que te dio Vercel.
-2. Iniciá sesión con el correo y contraseña que creaste en el Paso 2.
-3. Te va a pedir "¿Quién sos?". Click en "Nuevo perfil" y creá el primero (tu nombre y un PIN de 4 números).
-4. Repetí para cada persona que atienda la caja.
-5. Ya podés empezar a crear clientes y anotar fiado.
-
-## Desarrollo local (opcional)
-
-Si querés correr el proyecto en tu computadora antes de subirlo:
-
-```bash
-npm install
-cp .env.example .env
-# completá el archivo .env con los valores del Paso 4
 npm run dev
 ```
 
-## Cómo funciona por dentro (resumen)
+## Build de producción
 
-- **Login**: un solo usuario de Firebase Authentication protege toda la base de datos. Nadie sin ese correo y contraseña puede leer ni escribir nada.
-- **Perfiles**: dentro de la app, cada persona (vos, tu mamá, etc.) tiene un perfil con nombre y PIN de 4 números. Esto no es seguridad, es solo para saber quién anotó cada transacción. Después de 30 minutos sin usar la página, pide el PIN de nuevo.
-- **Clientes**: nombre, teléfono opcional, y un límite de crédito editable (50,000 por defecto). Si un cliente se pasa del límite, la app muestra una alerta pero no bloquea la operación, la decisión la toma la persona en caja.
-- **Transacciones**: cada fiado o pago queda guardado con fecha y hora de Costa Rica, quién lo anotó, y si se editó, quién lo editó y cuándo.
-- **Resumen del día**: junta todos los movimientos de una fecha (por defecto hoy) y separa cuánto se fió y cuánto entró por cada método de pago, para que cuadrar la caja en la noche sea más fácil.
+```bash
+npm run build
+```
+
+## Despliegue
+
+El proyecto está pensado para desplegarse en Vercel con despliegue automático: cada push a la rama principal dispara un build nuevo. Las variables de entorno se configuran igual que en local, pero desde el panel de Environment Variables de Vercel.

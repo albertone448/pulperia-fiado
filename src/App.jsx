@@ -24,13 +24,11 @@ export default function App() {
 
   const inactividadTimer = useRef(null)
 
-  // Escucha el estado de sesión de Firebase Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setAuthUser(user))
     return () => unsub()
   }, [])
 
-  // Se suscribe a los 3 nodos de la base de datos cuando ya hay sesión
   useEffect(() => {
     if (!authUser) return
     const unsubPerfiles = onValue(ref(db, 'perfiles'), (snap) => setPerfiles(snap.val() || {}))
