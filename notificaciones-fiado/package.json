@@ -1,0 +1,17 @@
+{
+  "name": "notificaciones-fiado",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.24",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.4.0",
+    "nodemailer": "^9.0.5",
+    "pino": "^9.4.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

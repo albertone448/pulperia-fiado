@@ -10,7 +10,7 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 
 ## Funcionalidades principales
 
-- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se borran físicamente. Hay dos estados reversibles, gestionables desde "Editar datos del cliente":
+- **Clientes**: alta con nombre, teléfono opcional, correo electrónico opcional y límite de crédito editable (50,000 colones por defecto). Cada cliente decide, con dos casillas independientes, si quiere que se le avise por WhatsApp, por correo, por ambos o por ninguno cuando se le registra una compra o un pago (ver [`notificaciones-fiado/`](./notificaciones-fiado)). Los clientes nunca se borran físicamente. Hay dos estados reversibles, gestionables desde "Editar datos del cliente":
   - **Eliminado**: solo si el saldo está en cero. Desaparece de la lista principal y se restaura en cualquier momento desde "Clientes eliminados".
   - **Suspendido**: para clientes que dejaron de venir pero podrían volver, tengan o no deuda pendiente. No desaparece de la lista de clientes: queda en una sección aparte al final, debajo de una línea divisoria, con el nombre atenuado y una etiqueta de "Suspendido", así el buscador de arriba también los encuentra si alguien viene a pagar. Se puede seguir abriendo su ficha, ver su historial y registrarle pagos con normalidad; lo único que se bloquea es anotarle compras nuevas, hasta que se reactive.
 - **Registro de compras a crédito (fiado)** y **pagos**, estos últimos divisibles entre varios métodos (efectivo, tarjeta, SINPE) dentro de una misma transacción.
@@ -45,11 +45,11 @@ Este ecosistema está compuesto por dos partes con ciclos de vida completamente 
 
 La SPA de React descrita arriba: gestión de clientes, transacciones, estadísticas e impresión. Es lo único que se despliega en Vercel.
 
-### 2. [`whatsapp-fiado/`](./whatsapp-fiado) — Notificador de WhatsApp
+### 2. [`notificaciones-fiado/`](./notificaciones-fiado) — Notificador de WhatsApp y correo
 
-Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y envía un mensaje de WhatsApp automático al cliente cuando se le registra una compra o un pago.
+Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y avisa automáticamente al cliente cuando se le registra una compra o un pago, por WhatsApp, por correo (SMTP), o por ambos, según lo que tenga activado cada cliente.
 
-No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`whatsapp-fiado/README.md`](./whatsapp-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
+No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`notificaciones-fiado/README.md`](./notificaciones-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
 
 ## Stack tecnológico
 
@@ -71,7 +71,7 @@ pulperia-fiado/
 │   ├── firebase.js        # Inicialización de Firebase a partir de variables de entorno
 │   ├── App.jsx             # Enrutamiento de alto nivel, sesión, perfiles e inactividad
 │   └── index.css           # Estilos globales
-├── whatsapp-fiado/         # Componente independiente (ver sección de arriba)
+├── notificaciones-fiado/   # Componente independiente (ver sección de arriba)
 ├── index.html
 ├── package.json
 └── vite.config.js

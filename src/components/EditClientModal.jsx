@@ -6,6 +6,9 @@ import { formatColones } from '../utils/dateUtils'
 export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, onEliminado }) {
   const [nombre, setNombre] = useState(cliente.nombre || '')
   const [telefono, setTelefono] = useState(cliente.telefono || '')
+  const [correo, setCorreo] = useState(cliente.correo || '')
+  const [notificarWhatsapp, setNotificarWhatsapp] = useState(cliente.notificarWhatsapp !== false)
+  const [notificarCorreo, setNotificarCorreo] = useState(!!cliente.notificarCorreo)
   const [error, setError] = useState('')
   const [confirmando, setConfirmando] = useState(null) // 'eliminar' | 'suspender' | 'reactivar' | null
 
@@ -21,13 +24,18 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
     update(ref(db, `clientes/${clienteId}`), {
       nombre: nombre.trim(),
       telefono: telefono.trim() || null,
+      correo: correo.trim() || null,
+      // Sin teléfono/correo no hay a dónde mandar el aviso, así que la
+      // preferencia queda en false aunque el checkbox estuviera marcado.
+      notificarWhatsapp: telefono.trim() ? notificarWhatsapp : false,
+      notificarCorreo: correo.trim() ? notificarCorreo : false,
     })
     onCerrar()
   }
 
   // Borrado lógico: el cliente se marca como inactivo y desaparece de la lista
   // principal, pero el registro y su historial quedan intactos y se puede
-  // restaurar después desde "Suspendidos y eliminados".
+  // restaurar después desde "Clientes eliminados".
   function handleEliminar() {
     if (!puedeEliminar) return
     update(ref(db, `clientes/${clienteId}`), {
@@ -37,9 +45,10 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
     onEliminado?.()
   }
 
-  // Suspensión: para clientes que dejaron de venir pero podrían volver.
-  // Desaparece de la lista principal, no se le pueden anotar compras nuevas,
-  // pero sigue siendo visible y se le pueden registrar pagos con normalidad.
+  // Suspensión: para clientes que dejaron de venir pero podrían volver. Se
+  // mantiene en la lista de clientes, separado abajo del todo, y no se le
+  // pueden anotar compras nuevas, pero sigue viéndose con normalidad para
+  // consultarlo o registrarle pagos.
   function handleSuspender() {
     update(ref(db, `clientes/${clienteId}`), {
       suspendido: true,
@@ -67,11 +76,41 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
         <label className="campo-label">Teléfono (opcional)</label>
         <input className="campo-input" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
 
+        <label className="campo-label">Correo electrónico (opcional)</label>
+        <input
+          className="campo-input"
+          type="email"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+        />
+
+        <label className="campo-label">Notificaciones automáticas</label>
+        <div className="campo-checkbox">
+          <label>
+            <input
+              type="checkbox"
+              checked={telefono.trim() ? notificarWhatsapp : false}
+              disabled={!telefono.trim()}
+              onChange={(e) => setNotificarWhatsapp(e.target.checked)}
+            />
+            Avisar por WhatsApp
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={correo.trim() ? notificarCorreo : false}
+              disabled={!correo.trim()}
+              onChange={(e) => setNotificarCorreo(e.target.checked)}
+            />
+            Avisar por correo
+          </label>
+        </div>
+
         {error && <p className="mensaje-error">{error}</p>}
 
         {confirmando === 'eliminar' && (
           <div className="confirmacion-borrado">
-            <p>¿Seguro que querés eliminar a {cliente.nombre}? Podés restaurarlo después desde "Suspendidos y eliminados".</p>
+            <p>¿Seguro que querés eliminar a {cliente.nombre}? Podés restaurarlo después desde "Clientes eliminados".</p>
             <div className="modal-acciones">
               <button className="btn-secundario" type="button" onClick={() => setConfirmando(null)}>
                 No
@@ -86,8 +125,9 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
         {confirmando === 'suspender' && (
           <div className="confirmacion-borrado">
             <p>
-              ¿Suspender a {cliente.nombre}? Deja de aparecer en la lista principal y no se le van a poder anotar
-              compras nuevas, pero sí se le pueden seguir registrando pagos. Se puede reactivar cuando quieras.
+              ¿Suspender a {cliente.nombre}? Va a pasar a la sección de suspendidos, al final de la lista de
+              clientes, y no se le van a poder anotar compras nuevas, pero sí se le pueden seguir registrando pagos.
+              Se puede reactivar cuando quieras.
             </p>
             <div className="modal-acciones">
               <button className="btn-secundario" type="button" onClick={() => setConfirmando(null)}>
@@ -103,7 +143,7 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
         {confirmando === 'reactivar' && (
           <div className="confirmacion-borrado">
             <p>
-              ¿Reactivar a {cliente.nombre}? Vuelve a aparecer en la lista principal y se le pueden anotar compras
+              ¿Reactivar a {cliente.nombre}? Vuelve a la lista de clientes activos y se le pueden anotar compras
               con normalidad.
             </p>
             <div className="modal-acciones">

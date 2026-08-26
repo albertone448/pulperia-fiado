@@ -176,6 +176,7 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
 function NuevoCliente({ onCerrar }) {
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [correo, setCorreo] = useState('')
   const [limite, setLimite] = useState(String(LIMITE_DEFAULT))
   const [error, setError] = useState('')
 
@@ -189,6 +190,12 @@ function NuevoCliente({ onCerrar }) {
     update(nuevoRef, {
       nombre: nombre.trim(),
       telefono: telefono.trim() || null,
+      correo: correo.trim() || null,
+      // Preferencias de notificación por defecto: WhatsApp activado (así se
+      // mantiene el comportamiento de siempre) y correo apagado hasta que se
+      // active a mano desde "Editar datos del cliente".
+      notificarWhatsapp: true,
+      notificarCorreo: false,
       limite: Number(limite) || LIMITE_DEFAULT,
       creado: Date.now(),
     })
@@ -205,6 +212,9 @@ function NuevoCliente({ onCerrar }) {
 
         <label className="campo-label">Teléfono (opcional)</label>
         <input className="campo-input" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+
+        <label className="campo-label">Correo electrónico (opcional)</label>
+        <input className="campo-input" type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
 
         <label className="campo-label">Límite de crédito</label>
         <input

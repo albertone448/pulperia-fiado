@@ -101,6 +101,24 @@ select {
   border-color: var(--color-morado);
 }
 
+.campo-checkbox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-texto);
+}
+
+.campo-checkbox label:has(input:disabled) {
+  color: var(--color-texto-suave);
+}
+
 .campo-monto {
   font-family: 'DM Mono', monospace;
   font-size: 18px;

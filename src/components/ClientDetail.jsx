@@ -56,6 +56,7 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         <div>
           <h2 className="cliente-nombre-grande">{cliente.nombre}</h2>
           {cliente.telefono && <p className="cliente-telefono">{cliente.telefono}</p>}
+          {cliente.correo && <p className="cliente-telefono">{cliente.correo}</p>}
           <button className="btn-link" onClick={() => setEditandoCliente(true)}>
             Editar datos del cliente
           </button>
