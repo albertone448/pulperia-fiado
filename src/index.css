@@ -422,6 +422,35 @@ select {
   font-size: 14px;
 }
 
+.separador-suspendidos {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-texto-suave);
+  border-top: 1px solid var(--color-borde);
+  margin: 18px 0 8px;
+  padding-top: 14px;
+}
+
+.fila-cliente-suspendida .fila-cliente-nombre,
+.fila-cliente-suspendida .fila-cliente-telefono,
+.fila-cliente-suspendida .monto-deuda {
+  color: var(--color-texto-suave);
+}
+
+.etiqueta-suspendido {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-morado);
+  background: var(--color-morado-claro);
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 /* ---------- Modal ---------- */
 
 .modal-fondo {

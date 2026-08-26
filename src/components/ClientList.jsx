@@ -11,6 +11,9 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
   const [creando, setCreando] = useState(false)
   const [viendoArchivo, setViendoArchivo] = useState(false)
 
+  const filtroBusqueda = (cliente) =>
+    cliente.nombre?.toLowerCase().includes(busqueda.toLowerCase().trim())
+
   const listaOrdenada = useMemo(() => {
     return Object.entries(clientes || {})
       .filter(([, cliente]) => !cliente.inactivo && !cliente.suspendido)
@@ -19,9 +22,7 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
         cliente,
         deuda: calcularDeuda(transacciones, id),
       }))
-      .filter(({ cliente }) =>
-        cliente.nombre?.toLowerCase().includes(busqueda.toLowerCase().trim())
-      )
+      .filter(({ cliente }) => filtroBusqueda(cliente))
       .sort((a, b) => b.deuda - a.deuda)
   }, [clientes, transacciones, busqueda])
 
@@ -33,8 +34,9 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
         cliente,
         deuda: calcularDeuda(transacciones, id),
       }))
-      .sort((a, b) => (b.cliente.suspendidoDesde || 0) - (a.cliente.suspendidoDesde || 0))
-  }, [clientes, transacciones])
+      .filter(({ cliente }) => filtroBusqueda(cliente))
+      .sort((a, b) => b.deuda - a.deuda)
+  }, [clientes, transacciones, busqueda])
 
   const eliminados = useMemo(() => {
     return Object.entries(clientes || {})
@@ -42,8 +44,20 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
       .sort(([, a], [, b]) => (b.inactivoDesde || 0) - (a.inactivoDesde || 0))
   }, [clientes])
 
-  const totalActivos = listaOrdenada.reduce((acc, c) => acc + c.deuda, 0)
-  const totalSuspendidos = suspendidos.reduce((acc, c) => acc + c.deuda, 0)
+  // Los totales se calculan sobre todos los clientes con deuda (sin filtro de
+  // búsqueda), para que el resumen de arriba no cambie mientras se escribe.
+  const totalActivos = useMemo(() => {
+    return Object.entries(clientes || {})
+      .filter(([, cliente]) => !cliente.inactivo && !cliente.suspendido)
+      .reduce((acc, [id]) => acc + calcularDeuda(transacciones, id), 0)
+  }, [clientes, transacciones])
+
+  const totalSuspendidos = useMemo(() => {
+    return Object.entries(clientes || {})
+      .filter(([, cliente]) => cliente.suspendido)
+      .reduce((acc, [id]) => acc + calcularDeuda(transacciones, id), 0)
+  }, [clientes, transacciones])
+
   const totalGeneral = totalActivos + totalSuspendidos
 
   function restaurarCliente(id) {
@@ -56,30 +70,8 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
         <button className="btn-link" onClick={() => setViendoArchivo(false)}>
           &larr; Volver a clientes
         </button>
-        <h2 className="cliente-nombre-grande">Suspendidos y eliminados</h2>
+        <h2 className="cliente-nombre-grande">Clientes eliminados</h2>
 
-        <h3 className="subtitulo-historial">Suspendidos</h3>
-        <div className="lista-clientes">
-          {suspendidos.length === 0 && (
-            <p className="texto-vacio">No hay clientes suspendidos.</p>
-          )}
-          {suspendidos.map(({ id, cliente, deuda }) => (
-            <button key={id} className="fila-cliente" onClick={() => onAbrirCliente(id)}>
-              <div className="fila-cliente-info">
-                <span className="fila-cliente-nombre">{cliente.nombre}</span>
-                {cliente.telefono && <span className="fila-cliente-telefono">{cliente.telefono}</span>}
-                {cliente.suspendidoDesde && (
-                  <span className="texto-trazabilidad">
-                    Suspendido el {formatFechaHora(cliente.suspendidoDesde)}
-                  </span>
-                )}
-              </div>
-              <span className="monto-deuda">{formatColones(deuda)}</span>
-            </button>
-          ))}
-        </div>
-
-        <h3 className="subtitulo-historial">Eliminados</h3>
         <div className="lista-clientes">
           {eliminados.length === 0 && (
             <p className="texto-vacio">No hay clientes eliminados.</p>
@@ -150,9 +142,29 @@ export default function ClientList({ clientes, transacciones, onAbrirCliente }) 
         ))}
       </div>
 
-      {(suspendidos.length > 0 || eliminados.length > 0) && (
+      {suspendidos.length > 0 && (
+        <>
+          <div className="separador-suspendidos">Suspendidos</div>
+          <div className="lista-clientes">
+            {suspendidos.map(({ id, cliente, deuda }) => (
+              <button key={id} className="fila-cliente fila-cliente-suspendida" onClick={() => onAbrirCliente(id)}>
+                <div className="fila-cliente-info">
+                  <span className="fila-cliente-nombre">
+                    {cliente.nombre}
+                    <span className="etiqueta-suspendido">Suspendido</span>
+                  </span>
+                  {cliente.telefono && <span className="fila-cliente-telefono">{cliente.telefono}</span>}
+                </div>
+                <span className="monto-deuda">{formatColones(deuda)}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {eliminados.length > 0 && (
         <button className="btn-link" onClick={() => setViendoArchivo(true)}>
-          Ver suspendidos y eliminados ({suspendidos.length + eliminados.length})
+          Ver clientes eliminados ({eliminados.length})
         </button>
       )}
 
