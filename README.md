@@ -47,7 +47,7 @@ La SPA de React descrita arriba: gestión de clientes, transacciones, estadísti
 
 ### 2. [`notificaciones-fiado/`](./notificaciones-fiado) — Notificador de WhatsApp y correo
 
-Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y avisa automáticamente al cliente cuando se le registra una compra o un pago, por WhatsApp, por correo (SMTP), o por ambos, según lo que tenga activado cada cliente.
+Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y avisa automáticamente al cliente cuando se le registra una compra o un pago, por WhatsApp, por correo (SMTP), o por ambos, según lo que tenga activado cada cliente. También manda, una vez por semana (configurable, sábados 4am por defecto), un recordatorio de saldo pendiente a quien deba algo, con las últimas transacciones.
 
 No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`notificaciones-fiado/README.md`](./notificaciones-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
 

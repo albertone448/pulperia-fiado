@@ -15,6 +15,14 @@ Cada cliente tiene, en la página web (dentro de "Editar datos del cliente"), do
 
 Un cliente puede tener las dos activadas, una sola, o ninguna. Si tiene teléfono guardado pero la casilla de WhatsApp está apagada, no se le manda WhatsApp aunque tenga el número. Lo mismo aplica al correo.
 
+## Los mensajes
+
+Cada compra o pago genera un recibo corto (cliente, fecha, monto y saldo pendiente), con el mismo contenido por WhatsApp y por correo, aunque con formato distinto: por WhatsApp sale en un bloque de texto alineado en columnas, y por correo sale con una cabecera de color y una tabla.
+
+Además, una vez por semana se manda un recordatorio de saldo pendiente a todo cliente que deba algo (sin importar si está suspendido o no), con el mismo formato de recibo, mostrando las últimas 5 transacciones y el saldo total. Si un cliente no debe nada, no recibe nada.
+
+Por defecto se manda los **sábados a las 4:00am** (configurable con `RECORDATORIO_DIA_SEMANA` y `RECORDATORIO_HORA` en el `.env`, ver `.env.example`). El programa no depende de que la computadora esté encendida exactamente a esa hora: revisa "¿ya pasó la hora que toca y todavía no mandé el de esta semana?" apenas arranca, y de ahí en adelante cada hora. Si la compu estuvo apagada justo a las 4am por cualquier motivo, lo manda en cuanto se prenda (aunque sea más tarde ese mismo día), y si nunca se prende ese día, simplemente espera al sábado siguiente sin mandar nada atrasado.
+
 ## Qué necesitás antes de empezar
 
 - La computadora del súper (Windows), la que se queda prendida durante el horario de atención.
@@ -188,6 +196,26 @@ pm2 logs notificaciones-fiado
 
 No hace falta volver a escanear el código QR de WhatsApp: como la carpeta `auth_info` no se tocó, la sesión sigue conectada igual que antes.
 
+### Actualización puntual: recibos con formato y recordatorio semanal
+
+Si ya tenías la versión con WhatsApp + correo corriendo (la carpeta ya se llama `notificaciones-fiado`) y solo estás subiendo el cambio de los mensajes tipo recibo y el recordatorio semanal, es más simple todavía, **no hay ninguna dependencia nueva que instalar**:
+
+1. `pm2 stop notificaciones-fiado`
+2. Reemplazá únicamente `index.js` y `.env.example` por los nuevos (`package.json` no cambió).
+3. Si querés cambiar el día/hora del recordatorio semanal del valor por defecto (sábado 4am), agregá al `.env` existente:
+
+```
+RECORDATORIO_DIA_SEMANA=6
+RECORDATORIO_HORA=4
+```
+
+Si no las agregás, el programa usa esos mismos valores por defecto de todas formas.
+
+4. `pm2 restart notificaciones-fiado`
+5. Confirmá con `pm2 logs notificaciones-fiado` que dice `Conectado a WhatsApp correctamente.` y no hay errores.
+
+No hace falta tocar nada en Firebase: el programa crea solo, la primera vez que corre el chequeo semanal, un dato nuevo en la base (`configuracion/recordatorioSemanal/ultimoEnviado`) para llevar la cuenta de cuándo mandó el último recordatorio. Como este programa usa la clave de administrador (no las reglas normales de lectura/escritura), no hace falta cambiar ninguna regla de seguridad para que pueda escribir ahí.
+
 ---
 
 ## Configurar el envío de correo
@@ -229,3 +257,6 @@ Va a aparecer en los logs un mensaje de que se cerró la sesión y hay que volve
 
 **¿Hay que tocar algo en la laptop donde tenés GitHub y Vercel?**
 No, nada. Este servicio es completamente aparte, solo vive en la compu del súper, y solo necesita que la base de datos de Firebase sea la misma (que ya lo es).
+
+**¿Qué pasa si cambio el día/hora del recordatorio semanal en el `.env` después de que ya se mandó uno esa semana?**
+Se aplica desde la próxima revisión: si el nuevo horario todavía no pasó esta semana, espera a que pase (no manda uno extra de inmediato); si el nuevo horario ya pasó esta semana y no coincide con el último enviado, lo manda en la siguiente revisión (dentro de la próxima hora, como máximo).
