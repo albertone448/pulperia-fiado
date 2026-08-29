@@ -136,6 +136,8 @@ export default function App() {
           <ClientList
             clientes={clientes}
             transacciones={transacciones}
+            perfilActivo={perfilActivo}
+            perfiles={perfiles}
             onAbrirCliente={(id) => setClienteAbiertoId(id)}
           />
         ) : vista === 'resumen' ? (

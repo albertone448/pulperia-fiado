@@ -36,9 +36,11 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
   // Los clientes suspendidos se sacan del ranking principal: ya se sabe que no
   // están pagando, así que no aportan nada a "detectar algo inusual" entre los
   // activos. Su deuda se muestra aparte, sin mezclarse en el orden ni el promedio.
+  // Las ventas esporádicas tampoco entran: son tickets puntuales, no clientes
+  // habituales, y ya son bien visibles desde la lista principal.
   const clientesActivos = useMemo(() => {
     return Object.fromEntries(
-      Object.entries(clientes || {}).filter(([, cliente]) => !cliente.suspendido)
+      Object.entries(clientes || {}).filter(([, cliente]) => !cliente.suspendido && !cliente.esporadico)
     )
   }, [clientes])
 

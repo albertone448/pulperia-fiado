@@ -4,7 +4,7 @@ import { db } from '../firebase'
 
 const METODOS = ['efectivo', 'tarjeta', 'sinpe']
 
-export default function NewPaymentModal({ clienteId, perfilActivo, perfiles, onCerrar }) {
+export default function NewPaymentModal({ clienteId, cliente, deudaActual, perfilActivo, perfiles, onCerrar, onCerradoDefinitivo }) {
   const [filas, setFilas] = useState([{ metodo: 'efectivo', monto: '' }])
   const [error, setError] = useState('')
 
@@ -45,7 +45,16 @@ export default function NewPaymentModal({ clienteId, perfilActivo, perfiles, onC
       perfilNombre: perfiles[perfilActivo]?.nombre || '',
       timestamp: Date.now(),
     })
-    onCerrar()
+
+    // Una venta esporádica es de una sola compra: en cuanto termina de
+    // pagarse se cierra sola (igual que un cliente eliminado normal), sin
+    // que alguien lo tenga que hacer a mano.
+    if (cliente?.esporadico && deudaActual - total <= 0) {
+      update(ref(db, `clientes/${clienteId}`), { inactivo: true, inactivoDesde: Date.now() })
+      onCerradoDefinitivo ? onCerradoDefinitivo() : onCerrar()
+    } else {
+      onCerrar()
+    }
   }
 
   return (

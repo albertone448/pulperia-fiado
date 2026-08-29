@@ -168,13 +168,15 @@ export default function EditClientModal({ clienteId, cliente, deuda, onCerrar, o
               >
                 Eliminar cliente
               </button>
-              <button
-                className="btn-link"
-                type="button"
-                onClick={() => setConfirmando(estaSuspendido ? 'reactivar' : 'suspender')}
-              >
-                {estaSuspendido ? 'Reactivar cliente' : 'Suspender cliente'}
-              </button>
+              {!cliente.esporadico && (
+                <button
+                  className="btn-link"
+                  type="button"
+                  onClick={() => setConfirmando(estaSuspendido ? 'reactivar' : 'suspender')}
+                >
+                  {estaSuspendido ? 'Reactivar cliente' : 'Suspender cliente'}
+                </button>
+              )}
             </div>
             {!puedeEliminar && (
               <p className="texto-trazabilidad">
