@@ -185,11 +185,14 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         <EditTransactionModal
           transaccionId={editando[0]}
           transaccion={editando[1]}
+          clienteId={clienteId}
+          cliente={cliente}
           perfilActivo={perfilActivo}
           perfiles={perfiles}
           deudaActual={deuda}
           limite={limite}
           onCerrar={() => setEditando(null)}
+          onCerradoDefinitivo={onVolver}
         />
       )}
       {editandoCliente && (

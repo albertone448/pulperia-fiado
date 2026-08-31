@@ -6,7 +6,18 @@ import { calcularEstadoLimite } from '../utils/deudas'
 
 const METODOS = ['efectivo', 'tarjeta', 'sinpe']
 
-export default function EditTransactionModal({ transaccionId, transaccion, perfilActivo, perfiles, deudaActual, limite, onCerrar }) {
+export default function EditTransactionModal({
+  transaccionId,
+  transaccion,
+  clienteId,
+  cliente,
+  perfilActivo,
+  perfiles,
+  deudaActual,
+  limite,
+  onCerrar,
+  onCerradoDefinitivo,
+}) {
   const esCargo = transaccion.tipo === 'cargo'
   const [descripcion, setDescripcion] = useState(transaccion.descripcion || '')
   const [monto, setMonto] = useState(String(transaccion.monto || ''))
@@ -28,6 +39,23 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
 
   function actualizarMetodo(i, campo, valor) {
     setMetodos((prev) => prev.map((m, idx) => (idx === i ? { ...m, [campo]: valor } : m)))
+  }
+
+  // Una venta esporádica se cierra sola en cuanto su saldo llega a cero, sea
+  // por un pago (ver NewPaymentModal) o, como acá, porque se editó o se borró
+  // la transacción que la dejaba con saldo pendiente.
+  function cerrarSiCorresponde(nuevoSaldo) {
+    if (!cliente?.esporadico || nuevoSaldo > 0) return false
+    update(ref(db, `clientes/${clienteId}`), { inactivo: true, inactivoDesde: Date.now() })
+    return true
+  }
+
+  function cerrarPantalla(seCerro) {
+    if (seCerro && onCerradoDefinitivo) {
+      onCerradoDefinitivo()
+    } else {
+      onCerrar()
+    }
   }
 
   function handleSubmit(e) {
@@ -65,12 +93,20 @@ export default function EditTransactionModal({ transaccionId, transaccion, perfi
     }
 
     update(ref(db, `transacciones/${transaccionId}`), cambios)
-    onCerrar()
+
+    // Saldo que va a quedar después de este cambio: se le quita el efecto
+    // que tenía la transacción original y se le suma el efecto del nuevo
+    // monto ya guardado arriba.
+    const nuevoSaldo = esCargo
+      ? deudaActual - (transaccion.monto || 0) + cambios.monto
+      : deudaActual + (transaccion.monto || 0) - cambios.monto
+    cerrarPantalla(cerrarSiCorresponde(nuevoSaldo))
   }
 
   function handleBorrar() {
     remove(ref(db, `transacciones/${transaccionId}`))
-    onCerrar()
+    const nuevoSaldo = esCargo ? deudaActual - (transaccion.monto || 0) : deudaActual + (transaccion.monto || 0)
+    cerrarPantalla(cerrarSiCorresponde(nuevoSaldo))
   }
 
   return (
