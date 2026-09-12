@@ -64,7 +64,8 @@ function fechaCorta(timestamp) {
   return `${dia}/${mes}`
 }
 
-// Fecha y hora completas, para el recibo de una transacción individual.
+// Fecha y hora completas, para el recibo de una transacción individual y
+// para el aviso de arranque del programa.
 function fechaHoraTexto(timestamp) {
   return new Date(timestamp).toLocaleString('es-CR', {
     day: '2-digit',
@@ -238,6 +239,7 @@ function htmlRecordatorioSemanal(nombre, movimientos, saldo) {
 
 let sock = null
 let escuchando = false // evita registrar el listener de Firebase más de una vez si se reconecta
+let avisoInicioEnviado = false // evita mandar el aviso de arranque más de una vez por corrida
 
 async function iniciarWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
@@ -276,8 +278,29 @@ async function iniciarWhatsApp() {
       console.log('Conectado a WhatsApp correctamente.')
       escucharTransacciones()
       iniciarRecordatorioSemanal()
+      avisarInicio()
     }
   })
+}
+
+// Un mensaje corto al número del dueño, una sola vez por arranque del
+// programa (no en cada reconexión del día), para poder confirmar de un
+// vistazo, cada mañana, que el sistema conectó bien. Es opcional: si no hay
+// NUMERO_AVISO_INICIO en el .env, simplemente no se manda nada.
+async function avisarInicio() {
+  if (avisoInicioEnviado) return
+  avisoInicioEnviado = true
+
+  const numero = normalizarTelefono(process.env.NUMERO_AVISO_INICIO)
+  if (!numero) return
+
+  try {
+    const texto = `✅ Notificaciones-fiado se conectó correctamente.\n${fechaHoraTexto(Date.now())}`
+    await sock.sendMessage(numero + '@s.whatsapp.net', { text: texto })
+    console.log('Aviso de arranque enviado.')
+  } catch (error) {
+    console.error('No se pudo enviar el aviso de arranque (no pasa nada, se sigue funcionando):', error.message)
+  }
 }
 
 // ---------- Escuchar transacciones nuevas en Firebase ----------
