@@ -9,7 +9,6 @@ export function calcularDeuda(transacciones, clienteId) {
   return total
 }
 
-
 // Devuelve las transacciones de un cliente, ordenadas de más reciente a más vieja.
 export function transaccionesDeCliente(transacciones, clienteId) {
   return Object.entries(transacciones || {})
@@ -98,7 +97,10 @@ export function calcularEstadisticasCliente(transacciones, clienteId) {
       totalPagadoHistorico += Number(t.monto) || 0
       cantidadPagos += 1
     }
-    if (saldo === 0) ultimoCero = t.timestamp
+    // Un pago de más deja saldo negativo (a favor del cliente), pero para esta
+    // estadística eso cuenta igual que llegar a cero: lo que importa es que
+    // quedó libre de deuda, no el valor exacto del saldo.
+    if (saldo <= 0) ultimoCero = t.timestamp
   }
 
   const primerMovimiento = historialAsc[0]?.timestamp || null
