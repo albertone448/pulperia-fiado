@@ -9,6 +9,7 @@ export function calcularDeuda(transacciones, clienteId) {
   return total
 }
 
+
 // Devuelve las transacciones de un cliente, ordenadas de más reciente a más vieja.
 export function transaccionesDeCliente(transacciones, clienteId) {
   return Object.entries(transacciones || {})
