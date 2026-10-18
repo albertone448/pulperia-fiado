@@ -116,3 +116,58 @@ export function calcularEstadisticasCliente(transacciones, clienteId) {
     ultimoMovimiento,
   }
 }
+
+// Saldo del cliente justo después de cada movimiento: { idTransaccion: saldo }.
+export function calcularSaldosAcumulados(transacciones, clienteId) {
+  const saldos = {}
+  let saldo = 0
+  const historialAsc = Object.entries(transacciones || {})
+    .filter(([, t]) => t.clienteId === clienteId)
+    .sort(([, a], [, b]) => a.timestamp - b.timestamp)
+
+  for (const [id, t] of historialAsc) {
+    if (t.tipo === 'cargo') saldo += Number(t.monto) || 0
+    else if (t.tipo === 'pago') saldo -= Number(t.monto) || 0
+    saldos[id] = saldo
+  }
+  return saldos
+}
+
+export const VENTANAS_SALDO_BAJO = [
+  { id: '30d', etiqueta: '30 días', dias: 30 },
+  { id: '3m', etiqueta: '3 meses', dias: 90 },
+]
+
+// El saldo más bajo que tuvo la cuenta en los últimos `dias` días, o null si
+// el cliente no tiene historial que lo defina. Incluye el saldo con el que
+// entró a la ventana: si debía 5,000 y no se movió, su mínimo es 5,000.
+// Si no tenía movimientos antes de la ventana, ese 0 inicial no cuenta.
+export function calcularSaldoMasBajo(transacciones, clienteId, dias, ahora = Date.now()) {
+  const desde = ahora - dias * 24 * 60 * 60 * 1000
+  const historialAsc = Object.values(transacciones || {})
+    .filter((t) => t.clienteId === clienteId)
+    .sort((a, b) => a.timestamp - b.timestamp)
+
+  let saldo = 0
+  let minimo = null
+  let hayHistorialPrevio = false
+
+  for (const t of historialAsc) {
+    const saldoAntes = saldo
+    if (t.tipo === 'cargo') saldo += Number(t.monto) || 0
+    else if (t.tipo === 'pago') saldo -= Number(t.monto) || 0
+
+    if (t.timestamp < desde) {
+      hayHistorialPrevio = true
+      continue
+    }
+    if (minimo === null) {
+      minimo = hayHistorialPrevio ? Math.min(saldoAntes, saldo) : saldo
+    } else {
+      minimo = Math.min(minimo, saldo)
+    }
+  }
+
+  if (minimo === null && hayHistorialPrevio) minimo = saldo
+  return minimo
+}

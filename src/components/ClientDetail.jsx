@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { ref, update } from 'firebase/database'
 import { db } from '../firebase'
-import { calcularDeuda, transaccionesDeCliente, calcularEstadisticasCliente } from '../utils/deudas'
+import {
+  calcularDeuda,
+  transaccionesDeCliente,
+  calcularEstadisticasCliente,
+  calcularSaldosAcumulados,
+} from '../utils/deudas'
 import { formatColones, formatFechaHora } from '../utils/dateUtils'
 import { construirTicketCliente, copiarParaWhatsApp } from '../utils/ticket'
 import NewChargeModal from './NewChargeModal'
@@ -22,11 +27,10 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
 
   const deuda = calcularDeuda(transacciones, clienteId)
   const limite = cliente.limite ?? LIMITE_DEFAULT
-  const esEsporadico = !!cliente.esporadico
-  const excedido = !esEsporadico && deuda > limite
-  const estaSuspendido = !!cliente.suspendido
+  const excedido = deuda > limite
   const historial = transaccionesDeCliente(transacciones, clienteId)
   const estadisticasCliente = calcularEstadisticasCliente(transacciones, clienteId)
+  const saldos = calcularSaldosAcumulados(transacciones, clienteId)
   const textoTicket = construirTicketCliente({
     cliente,
     deuda,
@@ -55,12 +59,8 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
 
       <div className="tarjeta-cliente-header">
         <div>
-          <h2 className="cliente-nombre-grande">
-            {cliente.nombre}
-            {esEsporadico && <span className="etiqueta-esporadico">Venta esporádica</span>}
-          </h2>
+          <h2 className="cliente-nombre-grande">{cliente.nombre}</h2>
           {cliente.telefono && <p className="cliente-telefono">{cliente.telefono}</p>}
-          {cliente.correo && <p className="cliente-telefono">{cliente.correo}</p>}
           <button className="btn-link" onClick={() => setEditandoCliente(true)}>
             Editar datos del cliente
           </button>
@@ -79,51 +79,35 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
         </p>
       )}
 
-      {estaSuspendido && (
-        <p className="alerta-suspendido">
-          Cliente suspendido{cliente.suspendidoDesde ? ` desde ${formatFechaHora(cliente.suspendidoDesde)}` : ''}.
-          No se le pueden anotar compras nuevas, pero sí se le pueden registrar pagos.
-        </p>
-      )}
-
-      {!esEsporadico && (
-        <div className="limite-editor">
-          {editandoLimite ? (
-            <>
-              <input
-                className="campo-input campo-monto campo-limite-inline"
-                type="number"
-                value={nuevoLimite}
-                onChange={(e) => setNuevoLimite(e.target.value)}
-              />
-              <button className="btn-link" onClick={guardarLimite}>
-                Guardar
-              </button>
-              <button className="btn-link" onClick={() => setEditandoLimite(false)}>
-                Cancelar
-              </button>
-            </>
-          ) : (
-            <button className="btn-link" onClick={() => setEditandoLimite(true)}>
-              Límite: {formatColones(limite)} (editar)
+      <div className="limite-editor">
+        {editandoLimite ? (
+          <>
+            <input
+              className="campo-input campo-monto campo-limite-inline"
+              type="number"
+              value={nuevoLimite}
+              onChange={(e) => setNuevoLimite(e.target.value)}
+            />
+            <button className="btn-link" onClick={guardarLimite}>
+              Guardar
             </button>
-          )}
-        </div>
-      )}
+            <button className="btn-link" onClick={() => setEditandoLimite(false)}>
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <button className="btn-link" onClick={() => setEditandoLimite(true)}>
+            Límite: {formatColones(limite)} (editar)
+          </button>
+        )}
+      </div>
 
       <ClientStats cliente={cliente} clienteId={clienteId} transacciones={transacciones} />
 
       <div className="acciones-cliente">
-        {!esEsporadico && (
-          <button
-            className="btn-primario"
-            onClick={() => setModal('cargo')}
-            disabled={estaSuspendido}
-            title={estaSuspendido ? 'Reactivá al cliente para poder anotarle compras' : undefined}
-          >
-            + Anotar compra
-          </button>
-        )}
+        <button className="btn-primario" onClick={() => setModal('cargo')}>
+          + Anotar compra
+        </button>
         <button className="btn-secundario" onClick={() => setModal('pago')}>
           + Registrar pago
         </button>
@@ -152,10 +136,13 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
                 {t.editadoEn && ' · editado'}
               </span>
             </div>
-            <span className={t.tipo === 'cargo' ? 'monto-cargo' : 'monto-pago'}>
-              {t.tipo === 'cargo' ? '+' : '-'}
-              {formatColones(t.monto)}
-            </span>
+            <div className="fila-historial-monto">
+              <span className={t.tipo === 'cargo' ? 'monto-cargo' : 'monto-pago'}>
+                {t.tipo === 'cargo' ? '+' : '-'}
+                {formatColones(t.monto)}
+              </span>
+              <span className="fila-historial-saldo">Saldo {formatColones(saldos[id])}</span>
+            </div>
           </button>
         ))}
       </div>
@@ -173,35 +160,27 @@ export default function ClientDetail({ clienteId, cliente, transacciones, perfil
       {modal === 'pago' && (
         <NewPaymentModal
           clienteId={clienteId}
-          cliente={cliente}
-          deudaActual={deuda}
           perfilActivo={perfilActivo}
           perfiles={perfiles}
           onCerrar={() => setModal(null)}
-          onCerradoDefinitivo={onVolver}
         />
       )}
       {editando && (
         <EditTransactionModal
           transaccionId={editando[0]}
           transaccion={editando[1]}
-          clienteId={clienteId}
-          cliente={cliente}
           perfilActivo={perfilActivo}
           perfiles={perfiles}
           deudaActual={deuda}
           limite={limite}
           onCerrar={() => setEditando(null)}
-          onCerradoDefinitivo={onVolver}
         />
       )}
       {editandoCliente && (
         <EditClientModal
           clienteId={clienteId}
           cliente={cliente}
-          deuda={deuda}
           onCerrar={() => setEditandoCliente(false)}
-          onEliminado={onVolver}
         />
       )}
 
