@@ -10,13 +10,16 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 
 ## Funcionalidades principales
 
-- **Clientes**: alta con nombre, teléfono opcional y límite de crédito editable (50,000 colones por defecto). Los clientes nunca se eliminan, solo se editan, para preservar el historial completo.
+- **Clientes**: alta con nombre, teléfono opcional, correo electrónico opcional y límite de crédito editable (50,000 colones por defecto). Cada cliente decide, con dos casillas independientes, si quiere que se le avise por WhatsApp, por correo, por ambos o por ninguno cuando se le registra una compra o un pago (ver [`notificaciones-fiado/`](./notificaciones-fiado)). Los clientes nunca se borran físicamente. Hay dos estados reversibles, gestionables desde "Editar datos del cliente":
+  - **Eliminado**: solo si el saldo está en cero. Desaparece de la lista principal y se restaura en cualquier momento desde "Clientes eliminados".
+  - **Suspendido**: para clientes que dejaron de venir pero podrían volver, tengan o no deuda pendiente. No desaparece de la lista de clientes: queda en una sección aparte al final, debajo de una línea divisoria, con el nombre atenuado y una etiqueta de "Suspendido", así el buscador de arriba también los encuentra si alguien viene a pagar. Se puede seguir abriendo su ficha, ver su historial y registrarle pagos con normalidad; lo único que se bloquea es anotarle compras nuevas, hasta que se reactive.
+- **Ventas esporádicas**: para alguien que deja algo fiado una sola vez, sin ser cliente habitual (no tiene sentido crearle un perfil completo). Se registran desde un botón aparte, "+ Nueva", en su propia sección de la lista de clientes, pidiendo nombre, teléfono opcional, correo opcional y el monto de la compra en un solo paso (la compra queda anotada de inmediato). Si se deja teléfono o correo, el aviso automático por ese medio queda activado directamente, sin casillas que marcar. Es una transacción única: no se le pueden anotar más compras, solo registrarle pagos (completos o parciales) hasta saldarla. En cuanto el saldo llega a cero se cierra sola (sin que nadie tenga que eliminarla a mano) y pasa a "Clientes eliminados", donde queda accesible por si hace falta revisarla o revertirla.
 - **Registro de compras a crédito (fiado)** y **pagos**, estos últimos divisibles entre varios métodos (efectivo, tarjeta, SINPE) dentro de una misma transacción.
 - **Control de límite de crédito con margen de tolerancia**: además del límite configurado por cliente, se permite un margen del 5% antes de bloquear la operación de verdad. Por debajo del límite no hay aviso; entre el límite y el límite+5% se muestra una alerta pero se permite guardar; por encima de ese margen la operación queda bloqueada. Esta validación aplica tanto al registrar una compra nueva como al editar una existente.
 - **Historial editable con trazabilidad**: cada transacción registra quién la creó y, si se modifica, quién la editó y cuándo. En el perfil de cada cliente, cada movimiento muestra además cuánto quedó debiendo justo después de él.
 - **Perfiles con PIN**: en vez de una cuenta por persona, hay un único login para la tienda y perfiles internos (nombre + PIN de 4 dígitos) para identificar quién hizo cada acción, con cierre automático de perfil tras 5 minutos de inactividad.
 - **Resumen del día**: totales de fiado y de pagos por método, con selector de fecha, para cuadrar caja.
-- **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero), pensado para agregar más criterios fácilmente en el futuro. También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, saldo más bajo de los últimos 30 días y de los últimos 3 meses, que solo se muestra mientras sea mayor a cero, etc.).
+- **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero) y un botón para invertir el orden (ascendente/descendente), pensado para agregar más criterios fácilmente en el futuro. Los clientes suspendidos no entran en este ranking (para no distorsionar el promedio con cuentas que ya se sabe que están detenidas); si tienen saldo pendiente aparecen aparte, en un bloque separado. Las ventas esporádicas tampoco entran (ya son bien visibles desde la lista principal). También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, saldo más bajo de los últimos 30 días y de los últimos 3 meses, que solo se muestra mientras sea mayor a cero, etc.).
 - **Impresión y envío por WhatsApp**: tanto el resumen del día como el detalle de un cliente se pueden imprimir en una impresora térmica de 80mm, o copiar como texto formateado para compartir manualmente por WhatsApp.
 
 ## Arquitectura
@@ -43,11 +46,11 @@ Este ecosistema está compuesto por dos partes con ciclos de vida completamente 
 
 La SPA de React descrita arriba: gestión de clientes, transacciones, estadísticas e impresión. Es lo único que se despliega en Vercel.
 
-### 2. [`whatsapp-fiado/`](./whatsapp-fiado) — Notificador de WhatsApp
+### 2. [`notificaciones-fiado/`](./notificaciones-fiado) — Notificador de WhatsApp y correo
 
-Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y envía un mensaje de WhatsApp automático al cliente cuando se le registra una compra o un pago.
+Un programa de Node.js **completamente aparte**, que no se ejecuta como parte de esta aplicación ni está desplegado en Vercel. Corre de forma local en la computadora de la tienda, escucha directamente los cambios en la misma base de datos de Firebase (usando credenciales de administrador) y avisa automáticamente al cliente cuando se le registra una compra o un pago, por WhatsApp, por correo (SMTP), o por ambos, según lo que tenga activado cada cliente. También manda, una vez por semana (configurable, sábados 4am por defecto), un recordatorio de saldo pendiente a quien deba algo, con las últimas transacciones.
 
-No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`whatsapp-fiado/README.md`](./whatsapp-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
+No hay integración a nivel de código entre ambos: comparten únicamente la base de datos de Firebase como punto de contacto. Ver [`notificaciones-fiado/README.md`](./notificaciones-fiado/README.md) para el detalle completo de cómo funciona y cómo se instala.
 
 ## Stack tecnológico
 
@@ -69,7 +72,7 @@ pulperia-fiado/
 │   ├── firebase.js        # Inicialización de Firebase a partir de variables de entorno
 │   ├── App.jsx             # Enrutamiento de alto nivel, sesión, perfiles e inactividad
 │   └── index.css           # Estilos globales
-├── whatsapp-fiado/         # Componente independiente (ver sección de arriba)
+├── notificaciones-fiado/   # Componente independiente (ver sección de arriba)
 ├── index.html
 ├── package.json
 └── vite.config.js
@@ -117,6 +120,10 @@ Dado que la app usa un único login compartido en vez de cuentas individuales po
 ```
 
 Cualquier sesión autenticada (siempre la misma cuenta) tiene acceso completo a la base. La capa de "quién hizo qué" se resuelve a nivel de aplicación con los perfiles internos, no con reglas de Firebase por usuario.
+
+## Respaldo de datos
+
+Realtime Database tiene habilitada la copia de seguridad automática diaria, configurada directamente desde la consola de Firebase (Realtime Database → Copias de seguridad), no desde código ni desde este repositorio. Cada backup exporta los datos y las reglas a un bucket de Google Cloud Storage (`pulperia-fiado-default-rtdb-backups`). También se puede disparar una copia manual desde la misma pantalla en cualquier momento.
 
 ## Ejecución en desarrollo
 

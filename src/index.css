@@ -101,6 +101,24 @@ select {
   border-color: var(--color-morado);
 }
 
+.campo-checkbox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.campo-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-texto);
+}
+
+.campo-checkbox label:has(input:disabled) {
+  color: var(--color-texto-suave);
+}
+
 .campo-monto {
   font-family: 'DM Mono', monospace;
   font-size: 18px;
@@ -116,6 +134,29 @@ select {
 
 .selector-criterio {
   margin: 16px 0 18px;
+}
+
+.selector-criterio-fila {
+  display: flex;
+  gap: 8px;
+}
+
+.selector-criterio-fila .campo-select {
+  flex: 1;
+}
+
+.btn-orden {
+  flex: 0 0 44px;
+  background: #fff;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--color-morado);
+  cursor: pointer;
+}
+
+.btn-orden:hover {
+  border-color: var(--color-morado);
 }
 
 .campo-limite-inline {
@@ -192,6 +233,11 @@ select {
   color: var(--color-rojo);
   font-weight: 600;
   cursor: pointer;
+}
+
+.btn-peligro-texto:disabled {
+  color: var(--color-texto-suave);
+  cursor: default;
 }
 
 .btn-ancho-fijo {
@@ -309,6 +355,12 @@ select {
   font-size: 16px;
 }
 
+.resumen-total-detalle {
+  font-size: 12px;
+  margin: 4px 0 0;
+  opacity: 0.85;
+}
+
 .lista-clientes {
   display: flex;
   flex-direction: column;
@@ -378,6 +430,68 @@ select {
   padding: 30px 0;
 }
 
+.fila-cliente-eliminado {
+  cursor: default;
+}
+
+.fila-cliente-eliminado .btn-secundario {
+  margin-top: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.separador-suspendidos {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-texto-suave);
+  border-top: 1px solid var(--color-borde);
+  margin: 18px 0 8px;
+  padding-top: 14px;
+}
+
+.fila-cliente-suspendida .fila-cliente-nombre,
+.fila-cliente-suspendida .fila-cliente-telefono,
+.fila-cliente-suspendida .monto-deuda {
+  color: var(--color-texto-suave);
+}
+
+.etiqueta-suspendido {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-morado);
+  background: var(--color-morado-claro);
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.etiqueta-esporadico {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-morado);
+  background: var(--color-morado-claro);
+  padding: 2px 6px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.seccion-esporadicos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.subtitulo-sin-margen {
+  margin: 0;
+}
+
 /* ---------- Modal ---------- */
 
 .modal-fondo {
@@ -423,6 +537,18 @@ select {
   display: flex;
   gap: 10px;
   margin-top: 20px;
+}
+
+.modal-acciones-secundarias {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.modal-acciones-secundarias .btn-link {
+  padding: 6px 0;
 }
 
 .modal-acciones-tres {
@@ -501,6 +627,15 @@ select {
 .alerta-limite {
   background: var(--color-rojo-claro);
   color: var(--color-rojo);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.alerta-suspendido {
+  background: var(--color-morado-claro);
+  color: var(--color-morado-oscuro);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
