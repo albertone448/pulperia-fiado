@@ -1004,3 +1004,170 @@ select {
   color: var(--color-texto-suave);
   border: none;
 }
+
+/* ---------- Etiquetas de precio ---------- */
+
+/* Con cuatro pestañas, en celulares angostos hay que apretar un poco el espacio. */
+@media (max-width: 480px) {
+  .tab {
+    padding: 14px 4px;
+    font-size: 14px;
+  }
+}
+
+.etiquetas-titulo-lista {
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.fila-producto {
+  gap: 10px;
+  cursor: default;
+  padding: 10px 14px;
+}
+
+.producto-check {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--color-morado);
+}
+
+.fila-producto-info {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  background: none;
+  border: none;
+  padding: 6px 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.etiqueta-pendiente {
+  margin-left: 8px;
+}
+
+.etiquetas-seleccion {
+  background: var(--color-bg-suave);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 12px 14px;
+}
+
+.etiquetas-seleccion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.etiquetas-seleccion-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.etiquetas-seleccion-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.etiquetas-imprimir {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.etiquetas-pie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.importar-resumen ul {
+  margin: 12px 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.importar-aviso {
+  background: var(--color-morado-claro);
+  color: var(--color-morado-oscuro);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.importar-subtitulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  margin: 12px 0 4px;
+}
+
+.importar-ejemplo {
+  font-size: 13px;
+  margin: 2px 0;
+}
+
+/* Etiquetas para imprimir. Se montan fuera de #root: en pantalla quedan fuera
+   de la vista (para poder medir los textos) y al imprimir son lo único visible. */
+.etiquetas-print-area {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 71.5mm;
+  background: #fff;
+  color: #000;
+}
+
+.etiqueta {
+  width: 71.5mm;
+  padding: 2.2mm 1mm 1.8mm;
+  border-bottom: 0.3mm dashed #000;
+  text-align: center;
+  break-inside: avoid;
+}
+
+.etiqueta-nombre {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 16pt;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.etiqueta-precio {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 52pt;
+  line-height: 1;
+  white-space: nowrap;
+  margin-top: 1.2mm;
+}
+
+@page etiquetas {
+  margin: 0;
+}
+
+@media print {
+  body.imprimiendo-etiquetas #root {
+    display: none;
+  }
+  body.imprimiendo-etiquetas .etiquetas-print-area {
+    position: static;
+    page: etiquetas;
+  }
+  .etiquetas-print-area,
+  .etiquetas-print-area * {
+    visibility: visible;
+  }
+}

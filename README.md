@@ -21,6 +21,25 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 - **Resumen del día**: totales de fiado y de pagos por método, con selector de fecha, para cuadrar caja.
 - **Estadísticas**: ranking de clientes con deuda pendiente, con un selector para ordenar por distintos criterios (tiempo sin pagar, tiempo sin dejar la cuenta en cero) y un botón para invertir el orden (ascendente/descendente), pensado para agregar más criterios fácilmente en el futuro. Los clientes suspendidos no entran en este ranking (para no distorsionar el promedio con cuentas que ya se sabe que están detenidas); si tienen saldo pendiente aparecen aparte, en un bloque separado. Las ventas esporádicas tampoco entran (ya son bien visibles desde la lista principal). También incluye estadísticas individuales por cliente (total histórico fiado, total pagado, última vez que la cuenta quedó en cero, saldo más bajo de los últimos 30 días y de los últimos 3 meses, que solo se muestra mientras sea mayor a cero, etc.).
 - **Impresión y envío por WhatsApp**: tanto el resumen del día como el detalle de un cliente se pueden imprimir en una impresora térmica de 80mm, o copiar como texto formateado para compartir manualmente por WhatsApp.
+- **Etiquetas de precio**: pestaña aparte para imprimir las etiquetas de los estantes (nombre y precio en letra grande) en la misma impresora de 80mm. Ver la sección de abajo.
+
+## Etiquetas de precio
+
+La pestaña **Etiquetas** guarda los productos de la tienda (nombre, precio y códigos de barras) y imprime etiquetas para los estantes, varias seguidas en una sola impresión para desperdiciar menos papel. Cada etiqueta lleva una sola copia por producto.
+
+Uso diario:
+
+1. Buscar por nombre o por código de barras en la misma caja (con el lector, el producto escaneado se agrega solo a "Para imprimir").
+2. Marcar los productos y tocar "Imprimir etiquetas".
+3. Al cerrar el diálogo de impresión, la app pregunta si salieron bien. Si sí, se quitan de pendientes; si no, quedan para reintentar.
+
+**Pendientes**: son los productos que necesitan etiqueta nueva. Un producto nuevo queda pendiente, y uno que ya se imprimió alguna vez vuelve a quedar pendiente si cambia su precio. Los productos que nunca se imprimieron (por ejemplo, un refresco de la nevera) no se marcan al cambiar de precio. Cualquier pendiente se puede descartar con la X.
+
+**Importar del sistema de ventas**: se sube el XML de productos exportado por el sistema. Se usa el `Id` del sistema como identificador (se guarda con la llave `s{Id}`), así que un cambio de nombre o de código no duplica el producto. Se omiten los que no tienen nombre o tienen precio cero. La primera importación no deja nada pendiente; las siguientes agregan los productos nuevos y actualizan los precios. Los productos creados a mano desde la app no se tocan al importar.
+
+Los productos se guardan en el nodo `/productos` de Firebase (no necesita reglas nuevas) y solo se descargan al abrir la pestaña. Cada producto tiene `nombre`, `precio`, `codigos`, `idSistema` (vacío si se creó a mano), `pendiente`, `impresoAlgunaVez`, `precioActualizadoEn`, `actualizadoPor` y `creado`.
+
+Detalles de impresión: la etiqueta mide 71.5 mm de ancho, pensada para una impresora con 72 mm de área imprimible. En el diálogo de impresión hay que elegir ese papel y escala 100 por ciento, sin márgenes. El precio y el nombre se achican solos si no caben (precios de cinco dígitos y nombres largos). Estas etiquetas no interfieren con la impresión de tickets de clientes.
 
 ## Arquitectura
 
@@ -68,7 +87,7 @@ No hay integración a nivel de código entre ambos: comparten únicamente la bas
 pulperia-fiado/
 ├── src/
 │   ├── components/       # Componentes de React (una vista o modal cada uno)
-│   ├── utils/             # Lógica de negocio pura: cálculo de deudas, tickets, fechas
+│   ├── utils/             # Lógica de negocio pura: cálculo de deudas, tickets, fechas, productos
 │   ├── firebase.js        # Inicialización de Firebase a partir de variables de entorno
 │   ├── App.jsx             # Enrutamiento de alto nivel, sesión, perfiles e inactividad
 │   └── index.css           # Estilos globales

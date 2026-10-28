@@ -8,6 +8,7 @@ import ClientList from './components/ClientList'
 import ClientDetail from './components/ClientDetail'
 import DailySummary from './components/DailySummary'
 import Statistics from './components/Statistics'
+import Etiquetas from './components/Etiquetas'
 
 // Después de este tiempo sin tocar nada, se vuelve a pedir el perfil (PIN).
 // No cierra la sesión de Firebase, solo "desloguea" el perfil activo.
@@ -19,7 +20,7 @@ export default function App() {
   const [clientes, setClientes] = useState({})
   const [transacciones, setTransacciones] = useState({})
   const [perfilActivo, setPerfilActivo] = useState(null)
-  const [vista, setVista] = useState('clientes') // 'clientes' | 'resumen'
+  const [vista, setVista] = useState('clientes') // 'clientes' | 'resumen' | 'estadisticas' | 'etiquetas'
   const [clienteAbiertoId, setClienteAbiertoId] = useState(null)
 
   const inactividadTimer = useRef(null)
@@ -119,6 +120,12 @@ export default function App() {
           >
             Estadísticas
           </button>
+          <button
+            className={vista === 'etiquetas' ? 'tab tab-activo' : 'tab'}
+            onClick={() => setVista('etiquetas')}
+          >
+            Etiquetas
+          </button>
         </nav>
       )}
 
@@ -146,12 +153,14 @@ export default function App() {
             transacciones={transacciones}
             perfiles={perfiles}
           />
-        ) : (
+        ) : vista === 'estadisticas' ? (
           <Statistics
             clientes={clientes}
             transacciones={transacciones}
             onAbrirCliente={(id) => setClienteAbiertoId(id)}
           />
+        ) : (
+          <Etiquetas perfilActivo={perfilActivo} perfiles={perfiles} />
         )}
       </main>
     </div>
