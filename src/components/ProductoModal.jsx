@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { ref, push, update, remove } from 'firebase/database'
 import { db } from '../firebase'
 import { formatColones } from '../utils/dateUtils'
-import { codigosDe, limpiarNombre, parsearCodigos } from '../utils/productos'
+import { codigosDe, limpiarNombre, nombrePublicoDe, parsearCodigos } from '../utils/productos'
 
 export default function ProductoModal({ productoId, producto, nombrePerfil, onCerrar }) {
   const esNuevo = !productoId
   const vieneDelSistema = producto?.idSistema != null
 
+  const [nombrePublico, setNombrePublico] = useState(producto ? nombrePublicoDe(producto) : '')
   const [nombre, setNombre] = useState(producto?.nombre || '')
   const [precio, setPrecio] = useState(producto ? String(producto.precio) : '')
   const [codigos, setCodigos] = useState(producto ? codigosDe(producto).join(', ') : '')
@@ -16,9 +17,9 @@ export default function ProductoModal({ productoId, producto, nombrePerfil, onCe
 
   function handleSubmit(e) {
     e.preventDefault()
-    const nombreLimpio = limpiarNombre(nombre)
+    const publicoLimpio = limpiarNombre(nombrePublico)
     const precioNum = Math.round(Number(precio))
-    if (nombreLimpio.length < 2) {
+    if (publicoLimpio.length < 2) {
       setError('Poné un nombre válido')
       return
     }
@@ -26,7 +27,15 @@ export default function ProductoModal({ productoId, producto, nombrePerfil, onCe
       setError('El precio tiene que ser mayor a cero')
       return
     }
-    const datos = { nombre: nombreLimpio, precio: precioNum, codigos: parsearCodigos(codigos) }
+    // El nombre del sistema solo se edita en productos creados a mano; en los
+    // importados lo manda el XML y se sobrescribe en cada importación.
+    const nombreSistema = vieneDelSistema ? producto.nombre : limpiarNombre(nombre) || publicoLimpio
+    const datos = {
+      nombre: nombreSistema,
+      nombrePublico: publicoLimpio,
+      precio: precioNum,
+      codigos: parsearCodigos(codigos),
+    }
     const ahora = Date.now()
 
     if (esNuevo) {
@@ -61,8 +70,22 @@ export default function ProductoModal({ productoId, producto, nombrePerfil, onCe
       <form className="modal-tarjeta" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
         <h2 className="modal-titulo">{esNuevo ? 'Nuevo producto' : 'Editar producto'}</h2>
 
-        <label className="campo-label">Nombre</label>
-        <input className="campo-input" value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
+        <label className="campo-label">Nombre para el público (el que se imprime)</label>
+        <input
+          className="campo-input"
+          value={nombrePublico}
+          onChange={(e) => setNombrePublico(e.target.value)}
+          autoFocus
+        />
+
+        <label className="campo-label">Nombre en el sistema (como en la factura)</label>
+        <input
+          className="campo-input"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          disabled={vieneDelSistema}
+          placeholder={vieneDelSistema ? '' : 'Opcional, si no se usa el mismo'}
+        />
 
         <label className="campo-label">Precio de venta (₡)</label>
         <input
@@ -85,8 +108,8 @@ export default function ProductoModal({ productoId, producto, nombrePerfil, onCe
 
         {vieneDelSistema && (
           <p className="texto-trazabilidad texto-producto-sistema">
-            Viene del sistema de ventas. Si cambiás el precio acá, la próxima importación lo vuelve a poner con el
-            precio del sistema.
+            Viene del sistema de ventas. El nombre del sistema y el precio se actualizan al importar; el nombre para
+            el público no. Si cambiás el precio acá, la próxima importación lo vuelve a poner con el del sistema.
           </p>
         )}
 
@@ -95,7 +118,7 @@ export default function ProductoModal({ productoId, producto, nombrePerfil, onCe
         {confirmandoBorrado ? (
           <div className="confirmacion-borrado">
             <p>
-              ¿Eliminar {producto.nombre} ({formatColones(producto.precio)})?
+              ¿Eliminar {nombrePublicoDe(producto)} ({formatColones(producto.precio)})?
             </p>
             <div className="modal-acciones">
               <button className="btn-secundario" type="button" onClick={() => setConfirmandoBorrado(false)}>

@@ -1,6 +1,8 @@
 // Productos para las etiquetas de precio de los estantes.
-// Nodo /productos/{llave}: nombre, precio, codigos, idSistema, pendiente,
-// impresoAlgunaVez, precioActualizadoEn, actualizadoPor, creado.
+// Nodo /productos/{llave}: nombre, nombrePublico, precio, codigos, idSistema,
+// pendiente, impresoAlgunaVez, precioActualizadoEn, actualizadoPor, creado.
+// `nombre` es el del sistema de ventas (como viene en la factura) y se
+// sobrescribe al importar; `nombrePublico` es el que se imprime en la etiqueta.
 // Los importados del sistema de ventas usan la llave `s{Id}`; los creados a
 // mano usan la llave que genera push().
 
@@ -13,6 +15,11 @@ export function normalizar(texto) {
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+// Los productos guardados antes de existir el nombre público no lo tienen: se imprime el del sistema.
+export function nombrePublicoDe(producto) {
+  return producto.nombrePublico || producto.nombre
 }
 
 export function limpiarNombre(nombre) {
@@ -46,12 +53,13 @@ export function buscarProductos(productos, texto, limite = 60) {
   const soloNumeros = /^\d+$/.test(consulta)
   const resultado = []
   for (const [key, p] of Object.entries(productos)) {
+    const nombres = normalizar(`${nombrePublicoDe(p)} ${p.nombre}`)
     const coincide =
-      palabras.every((palabra) => normalizar(p.nombre).includes(palabra)) ||
+      palabras.every((palabra) => nombres.includes(palabra)) ||
       (soloNumeros && codigosDe(p).some((c) => c.includes(consulta)))
     if (coincide) resultado.push([key, p])
   }
-  resultado.sort(([, a], [, b]) => a.nombre.localeCompare(b.nombre, 'es'))
+  resultado.sort(([, a], [, b]) => nombrePublicoDe(a).localeCompare(nombrePublicoDe(b), 'es'))
   return resultado.slice(0, limite)
 }
 
@@ -109,6 +117,7 @@ export function planificarImportacion(existentes, importados, ahora = Date.now()
   const escrituras = {}
   const nuevos = []
   const preciosCambiados = []
+  let nombresCambiados = 0
   let sinCambios = 0
 
   for (const imp of importados) {
@@ -118,6 +127,7 @@ export function planificarImportacion(existentes, importados, ahora = Date.now()
     if (!actual) {
       escrituras[key] = {
         nombre: imp.nombre,
+        nombrePublico: imp.nombre,
         precio: imp.precio,
         codigos: imp.codigos,
         idSistema: imp.id,
@@ -139,6 +149,10 @@ export function planificarImportacion(existentes, importados, ahora = Date.now()
     }
     if (actual.nombre !== imp.nombre) {
       escrituras[`${key}/nombre`] = imp.nombre
+      // Si todavía no tenía nombre público, se conserva el nombre anterior para que
+      // la etiqueta no cambie sola por un cambio de nombre en el sistema.
+      if (actual.nombrePublico == null) escrituras[`${key}/nombrePublico`] = actual.nombre
+      nombresCambiados += 1
       cambio = true
     }
     // Se suman los códigos nuevos sin quitar los que se agregaron a mano.
@@ -151,7 +165,7 @@ export function planificarImportacion(existentes, importados, ahora = Date.now()
     if (!cambio) sinCambios += 1
   }
 
-  return { primeraVez, escrituras, nuevos, preciosCambiados, sinCambios }
+  return { primeraVez, escrituras, nuevos, preciosCambiados, nombresCambiados, sinCambios }
 }
 
 // Firebase aguanta bien actualizaciones grandes, pero se parten en tandas

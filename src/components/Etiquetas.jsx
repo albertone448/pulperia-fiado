@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ref, onValue, update } from 'firebase/database'
 import { db } from '../firebase'
 import { formatColones } from '../utils/dateUtils'
-import { buscarPorCodigoExacto, buscarProductos } from '../utils/productos'
+import { buscarPorCodigoExacto, buscarProductos, nombrePublicoDe } from '../utils/productos'
 import HojaEtiquetas from './HojaEtiquetas'
 import ProductoModal from './ProductoModal'
 import ImportarProductos from './ImportarProductos'
@@ -27,7 +27,7 @@ export default function Etiquetas({ perfilActivo, perfiles }) {
     () =>
       Object.entries(lista)
         .filter(([, p]) => p.pendiente)
-        .sort(([, a], [, b]) => a.nombre.localeCompare(b.nombre, 'es')),
+        .sort(([, a], [, b]) => nombrePublicoDe(a).localeCompare(nombrePublicoDe(b), 'es')),
     [lista],
   )
   const resultados = useMemo(() => buscarProductos(lista, busqueda), [lista, busqueda])
@@ -99,9 +99,9 @@ export default function Etiquetas({ perfilActivo, perfiles }) {
           </div>
           {seleccionados.map(([key, p]) => (
             <div className="etiquetas-seleccion-fila" key={key}>
-              <span className="etiquetas-seleccion-nombre">{p.nombre}</span>
+              <span className="etiquetas-seleccion-nombre">{nombrePublicoDe(p)}</span>
               <span className="monto-deuda">{formatColones(p.precio)}</span>
-              <button className="btn-quitar-fila" onClick={() => alternar(key)} aria-label={`Quitar ${p.nombre}`}>
+              <button className="btn-quitar-fila" onClick={() => alternar(key)} aria-label={`Quitar ${nombrePublicoDe(p)}`}>
                 ×
               </button>
             </div>
@@ -140,18 +140,21 @@ export default function Etiquetas({ perfilActivo, perfiles }) {
               className="producto-check"
               checked={seleccion.includes(key)}
               onChange={() => alternar(key)}
-              aria-label={`Seleccionar ${p.nombre}`}
+              aria-label={`Seleccionar ${nombrePublicoDe(p)}`}
             />
             <button className="fila-producto-info" onClick={() => setEditando([key, p])}>
-              <span className="fila-cliente-nombre">{p.nombre}</span>
+              <span className="fila-cliente-nombre">{nombrePublicoDe(p)}</span>
               {p.pendiente && <span className="etiqueta-esporadico etiqueta-pendiente">Pendiente</span>}
+              {p.nombrePublico && p.nombrePublico !== p.nombre && (
+                <span className="fila-producto-sistema">{p.nombre}</span>
+              )}
             </button>
             <span className="monto-deuda">{formatColones(p.precio)}</span>
             {p.pendiente && (
               <button
                 className="btn-quitar-fila"
                 onClick={() => descartarPendiente(key)}
-                aria-label={`Quitar de pendientes ${p.nombre}`}
+                aria-label={`Quitar de pendientes ${nombrePublicoDe(p)}`}
                 title="No necesita etiqueta"
               >
                 ×

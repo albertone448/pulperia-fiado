@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { formatColones } from '../utils/dateUtils'
-import { nombreParaEtiqueta } from '../utils/productos'
+import { nombreParaEtiqueta, nombrePublicoDe } from '../utils/productos'
 
 const PT = 96 / 72
 const PRECIO_PT = 52
@@ -74,7 +74,7 @@ export default function HojaEtiquetas({ productos, onTerminado }) {
     <div className="etiquetas-print-area" ref={areaRef}>
       {productos.map(([key, p]) => (
         <div className="etiqueta" key={key}>
-          <div className="etiqueta-nombre">{nombreParaEtiqueta(p.nombre)}</div>
+          <div className="etiqueta-nombre">{nombreParaEtiqueta(nombrePublicoDe(p))}</div>
           <div className="etiqueta-precio">{formatColones(p.precio)}</div>
         </div>
       ))}

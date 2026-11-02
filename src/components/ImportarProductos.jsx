@@ -77,6 +77,10 @@ export default function ImportarProductos({ productos, onCerrar }) {
                 <strong>{plan.preciosCambiados.length}</strong> con precio distinto
               </li>
               <li>
+                <strong>{plan.nombresCambiados}</strong> con nombre distinto en el sistema (el nombre para el público
+                no cambia)
+              </li>
+              <li>
                 <strong>{plan.sinCambios}</strong> sin cambios
               </li>
               <li>

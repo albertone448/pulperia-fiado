@@ -27,6 +27,8 @@ Este proyecto digitaliza ese flujo manteniendo la misma simplicidad operativa de
 
 La pestaña **Etiquetas** guarda los productos de la tienda (nombre, precio y códigos de barras) y imprime etiquetas para los estantes, varias seguidas en una sola impresión para desperdiciar menos papel. Cada etiqueta lleva una sola copia por producto.
 
+Cada producto tiene dos nombres: el **nombre en el sistema** (el que viene en la factura y en el XML, útil para revisar precios) y el **nombre para el público**, que es el que se imprime. Al importar un producto nuevo los dos son iguales; después el nombre para el público se puede cambiar desde la app y las importaciones posteriores no lo tocan. La búsqueda encuentra el producto por cualquiera de los dos.
+
 Uso diario:
 
 1. Buscar por nombre o por código de barras en la misma caja (con el lector, el producto escaneado se agrega solo a "Para imprimir").
@@ -35,9 +37,9 @@ Uso diario:
 
 **Pendientes**: son los productos que necesitan etiqueta nueva. Un producto nuevo queda pendiente, y uno que ya se imprimió alguna vez vuelve a quedar pendiente si cambia su precio. Los productos que nunca se imprimieron (por ejemplo, un refresco de la nevera) no se marcan al cambiar de precio. Cualquier pendiente se puede descartar con la X.
 
-**Importar del sistema de ventas**: se sube el XML de productos exportado por el sistema. Se usa el `Id` del sistema como identificador (se guarda con la llave `s{Id}`), así que un cambio de nombre o de código no duplica el producto. Se omiten los que no tienen nombre o tienen precio cero. La primera importación no deja nada pendiente; las siguientes agregan los productos nuevos y actualizan los precios. Los productos creados a mano desde la app no se tocan al importar.
+**Importar del sistema de ventas**: se sube el XML de productos exportado por el sistema. Se usa el `Id` del sistema como identificador (se guarda con la llave `s{Id}`), así que un cambio de nombre o de código no duplica el producto: si el nombre cambió en el sistema se actualiza el nombre del sistema, nunca el nombre para el público. Se omiten los que no tienen nombre o tienen precio cero. La primera importación no deja nada pendiente; las siguientes agregan los productos nuevos y actualizan los precios. Los productos creados a mano desde la app no se tocan al importar.
 
-Los productos se guardan en el nodo `/productos` de Firebase (no necesita reglas nuevas) y solo se descargan al abrir la pestaña. Cada producto tiene `nombre`, `precio`, `codigos`, `idSistema` (vacío si se creó a mano), `pendiente`, `impresoAlgunaVez`, `precioActualizadoEn`, `actualizadoPor` y `creado`.
+Los productos se guardan en el nodo `/productos` de Firebase (no necesita reglas nuevas) y solo se descargan al abrir la pestaña. Cada producto tiene `nombre` (del sistema), `nombrePublico`, `precio`, `codigos`, `idSistema` (vacío si se creó a mano), `pendiente`, `impresoAlgunaVez`, `precioActualizadoEn`, `actualizadoPor` y `creado`.
 
 Detalles de impresión: la etiqueta mide 71.5 mm de ancho, pensada para una impresora con 72 mm de área imprimible. En el diálogo de impresión hay que elegir ese papel y escala 100 por ciento, sin márgenes. El precio y el nombre se achican solos si no caben (precios de cinco dígitos y nombres largos). Estas etiquetas no interfieren con la impresión de tickets de clientes.
 
