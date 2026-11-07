@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { calcularClientesSinPagar, calcularClientesPorUltimoCero, calcularDeuda } from '../utils/deudas'
 import { formatColones } from '../utils/dateUtils'
+import ResumenSemanal from './ResumenSemanal'
 
 // Cada criterio de orden vive acá. Para agregar uno nuevo en el futuro,
 // solo hay que sumar un objeto más a esta lista, no hay que tocar el resto
@@ -75,6 +76,8 @@ export default function Statistics({ clientes, transacciones, onAbrirCliente }) 
           <span className="tarjeta-resumen-valor">{promedioDias}</span>
         </div>
       </div>
+
+      <ResumenSemanal clientes={clientes} transacciones={transacciones} />
 
       <div className="selector-criterio">
         <label className="campo-label">Ordenar por</label>

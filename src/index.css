@@ -1005,6 +1005,53 @@ select {
   border: none;
 }
 
+/* ---------- Resumen semanal (Estadísticas) ---------- */
+
+.resumen-semanal {
+  margin-top: 20px;
+}
+
+.tabla-semanas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-semanas th {
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla-semanas td {
+  text-align: right;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--color-borde);
+  white-space: nowrap;
+}
+
+.tabla-semanas th:first-child,
+.tabla-semanas td:first-child {
+  text-align: left;
+  white-space: normal;
+}
+
+.semana-en-curso td {
+  background: var(--color-bg-suave);
+  font-weight: 600;
+}
+
+.semana-etiqueta {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-morado);
+}
+
 /* ---------- Etiquetas de precio ---------- */
 
 /* Con cuatro pestañas, en celulares angostos hay que apretar un poco el espacio. */

@@ -171,3 +171,45 @@ export function calcularSaldoMasBajo(transacciones, clienteId, dias, ahora = Dat
   if (minimo === null && hayHistorialPrevio) minimo = saldo
   return minimo
 }
+
+const DIA_MS = 24 * 60 * 60 * 1000
+// Costa Rica es UTC-6 todo el año, así que la semana se corta con un desfase fijo.
+const DESFASE_CR_MS = -6 * 60 * 60 * 1000
+
+// Medianoche del lunes de la semana en que cae `timestamp`, en hora de Costa Rica.
+function inicioSemanaCR(timestamp) {
+  const local = new Date(timestamp + DESFASE_CR_MS)
+  const diasDesdeLunes = (local.getUTCDay() + 6) % 7
+  const medianoche = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate())
+  return medianoche - diasDesdeLunes * DIA_MS - DESFASE_CR_MS
+}
+
+// Lo anotado a crédito y lo pagado en cada una de las últimas `semanas` semanas
+// (lunes a domingo), la más reciente primero. Las ventas esporádicas no cuentan:
+// se pagan en el momento, así que no son fiado ni cobranza.
+// A la semana en curso se le agrega lo que llevaba la anterior a esta misma
+// altura, porque una semana a medias siempre se ve baja frente a las completas.
+export function calcularResumenSemanal(clientes, transacciones, semanas = 8, ahora = Date.now()) {
+  const inicioActual = inicioSemanaCR(ahora)
+  const resumen = Array.from({ length: semanas }, (_, i) => {
+    const inicio = inicioActual - i * 7 * DIA_MS
+    return { inicio, fin: inicio + 7 * DIA_MS, fiado: 0, pagado: 0, enCurso: i === 0 }
+  })
+  const mismaAltura = { fiado: 0, pagado: 0 }
+  const limiteMismaAltura = ahora - 7 * DIA_MS
+
+  for (const t of Object.values(transacciones || {})) {
+    if (clientes?.[t.clienteId]?.esporadico) continue
+    const monto = Number(t.monto) || 0
+    const campo = t.tipo === 'cargo' ? 'fiado' : t.tipo === 'pago' ? 'pagado' : null
+    if (!campo) continue
+
+    const semana = resumen.find((s) => t.timestamp >= s.inicio && t.timestamp < s.fin)
+    if (semana) semana[campo] += monto
+    if (resumen[1] && t.timestamp >= resumen[1].inicio && t.timestamp < limiteMismaAltura) {
+      mismaAltura[campo] += monto
+    }
+  }
+
+  return { semanas: resumen.map((s) => ({ ...s, diferencia: s.fiado - s.pagado })), mismaAltura }
+}
